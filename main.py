@@ -1,22 +1,24 @@
-from src.speech.recognizer import VoiceRecognizer
-from src.llm.openai_client import LLMClient
 from src.google.apps_script import GoogleAppsScript
+from config.settings import SPREADSHEET_ID
 
 def main():
-    voice_recognizer = VoiceRecognizer()
-    llm_client = LLMClient()
-    apps_script = GoogleAppsScript()
+    apps_script = GoogleAppsScript(SPREADSHEET_ID)
     
-    print("Starting voice-controlled Google Apps Script...")
+    # Simple test script that logs to console
+    test_script = '''
+    function main() {
+      console.log("Hello World");
+      return "Script executed successfully!";
+    }
+    '''
     
-    voice_input = voice_recognizer.listen()
-    if voice_input:
-        print("\nGenerating Google Apps Script code...")
-        script_code = llm_client.get_apps_script_code(voice_input)
-        if script_code:
-            print("\nGenerated Script:")
-            print(script_code)
-            # Future: Deploy and execute script
+    print("\nUpdating script content...")
+    if apps_script.update_script(test_script):
+        print("\nExecuting script...")
+        result = apps_script.run_script()
+        print(f"\nExecution result: {result}")
+    else:
+        print("Failed to update script")
 
 if __name__ == "__main__":
     main() 

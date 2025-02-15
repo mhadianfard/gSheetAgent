@@ -15,12 +15,19 @@ if not OPENAI_API_KEY:
     raise Exception("OPENAI_API_KEY not found in .env file")
 
 # Google API Settings
-GOOGLE_CREDENTIALS_PATH = 'path/to/credentials.json'
+GOOGLE_CREDENTIALS_PATH = BASE_DIR / 'credentials.json'
 GOOGLE_TOKEN_PATH = BASE_DIR / 'token.json'
 GOOGLE_SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/script.projects'
+    'https://www.googleapis.com/auth/script.projects',
+    'https://www.googleapis.com/auth/drive.scripts',
+    'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/drive',
+    'https://www.googleapis.com/auth/script.deployments'
 ]
 
-# The ID of your Google Spreadsheet where scripts will be deployed
-SPREADSHEET_ID = os.getenv('SPREADSHEET_ID') 
+# Get Spreadsheet ID from environment
+SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
+
+if not SPREADSHEET_ID:
+    raise Exception("SPREADSHEET_ID not found in .env file") 
