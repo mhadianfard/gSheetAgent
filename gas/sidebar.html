@@ -2,12 +2,14 @@
 <html>
   <head>
     <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script>
       /**
        * Triggers the performAction function in the Google Apps Script.
        * This function handles success and failure responses from the script.
        */
-      function trigger() {
+      function applyChanges() {
         google.script.run
             .withSuccessHandler(function(response) {
                 // Handle success response if needed
@@ -22,11 +24,31 @@
                 }
             })
             .performAction();
-        }
+      }
+
+      function refresh() {
+        google.script.run.refreshSidebar();  // Call the refresh function
+      }
     </script>
   </head>
-  <body>
-    <h1>gSheetAgent</h1>
-    <button onclick="trigger()">Trigger</button>
+  <body style="background-color: #F0F4F9;">
+    <div class="container">
+      <button class="btn btn-light float-right mb-2" onclick="refresh()" title="Refresh Sidebar">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <h2 class="text-left mt-4 mb-3">gSheetAgent</h2>
+      <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
+      <textarea class="form-control" rows="8" placeholder="Enter your wishes here..."></textarea>
+      <button class="btn btn-primary btn-block mt-3" onclick="submitChanges()">Submit</button>
+      <div class="mt-3">
+        <div class="btn-group btn-group-justified w-100">
+          <button class="btn btn-success" onclick="applyChanges()"><strong>Apply</strong></button>
+          <button class="btn btn-secondary" onclick="cancel()">Cancel</button>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
   </body>
 </html> 

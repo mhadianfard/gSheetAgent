@@ -5,7 +5,6 @@ function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('gSheetAgent')
     .addItem('Open', 'showSidebar')
-    .addItem('Trigger', 'performAction')
     .addToUi();
 }
 
@@ -17,5 +16,12 @@ function showSidebar() {
       .evaluate()
       .setTitle('gSheetAgent');
   SpreadsheetApp.getUi().showSidebar(html);
+}
+
+/**
+ * Refreshes the sidebar content.
+ */
+function refreshSidebar() {
+  showSidebar();  // Call the function to show the sidebar again
 }
 

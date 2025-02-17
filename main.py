@@ -16,7 +16,7 @@ def main():
         if 'error' in response:
             print(f"Error: {response['error']}")
         else:
-            print("Upload Successful!")  # Print a success message
+            print("Upload Successful!\n")  # Print a success message
     except Exception as e:
         print(f"An error occurred: {e}")
 
