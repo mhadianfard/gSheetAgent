@@ -18,16 +18,17 @@ if not OPENAI_API_KEY:
 GOOGLE_CREDENTIALS_PATH = BASE_DIR / 'credentials.json'
 GOOGLE_TOKEN_PATH = BASE_DIR / 'token.json'
 GOOGLE_SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/script.projects',
-    'https://www.googleapis.com/auth/drive.scripts',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/script.deployments'
+    'https://www.googleapis.com/auth/drive.file'
 ]
 
 # Get Spreadsheet ID from environment
 SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
 
 if not SPREADSHEET_ID:
-    raise Exception("SPREADSHEET_ID not found in .env file") 
+    raise Exception("SPREADSHEET_ID not found in .env file")
+
+# Paths for ScriptUploader
+SCRIPT_ID_FILE = BASE_DIR / 'script_id.txt'
+TOKEN_FILE = BASE_DIR / 'token.json' 
+GAS_DIRECTORY = BASE_DIR / 'gas'

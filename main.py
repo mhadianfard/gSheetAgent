@@ -1,24 +1,10 @@
-from src.google.apps_script import GoogleAppsScript
-from config.settings import SPREADSHEET_ID
+from src.google.script_uploader import ScriptUploader
 
 def main():
-    apps_script = GoogleAppsScript(SPREADSHEET_ID)
-    
-    # Simple test script that logs to console
-    test_script = '''
-    function main() {
-      console.log("Hello World");
-      return "Script executed successfully!";
-    }
-    '''
-    
-    print("\nUpdating script content...")
-    if apps_script.update_script(test_script):
-        print("\nExecuting script...")
-        result = apps_script.run_script()
-        print(f"\nExecution result: {result}")
-    else:
-        print("Failed to update script")
+    uploader = ScriptUploader()
+    code_content = "function myFunction() { console.log('Hello, world! @ 11:05pm'); }"
+    response = uploader.update_script_content(code_content)
+    print(f"Updated script with response: {response}")
 
 if __name__ == "__main__":
     main() 
