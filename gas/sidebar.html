@@ -26,8 +26,65 @@
             .performAction();
       }
 
+      /**
+       * Refreshes the sidebar content by calling the refreshSidebar function in the Google Apps Script.
+       */
       function refresh() {
-        google.script.run.refreshSidebar();  // Call the refresh function
+        google.script.run.refreshSidebar();
+      }
+
+      /**
+       * Switches the sidebar to Confirmation Mode, hiding the prompt and showing the confirmation buttons.
+       */
+      function submitPrompt() {
+        // Show thinking mode
+        document.getElementById('promptMode').style.display = 'none';
+        document.getElementById('thinkingMode').style.display = 'block';
+
+        // Simulate a delay for the thinking mode
+        setTimeout(function() {
+          document.getElementById('thinkingMode').style.display = 'none';
+          showConfirmationText("Your confirmation message will appear here. This area can display a lot of information. Additional details can be added here as needed. More information can be displayed in this scrollable area.");
+        }, 3000); // 3 seconds delay
+      }
+
+      /**
+       * Displays the confirmation text with a typewriter effect.
+       * @param {string} text - The text to display in the confirmation area.
+       */
+      function showConfirmationText(text) {
+        const confirmationContainer = document.getElementById('confirmationText');
+        confirmationContainer.innerHTML = ''; // Clear previous text
+        document.getElementById('confirmationMode').style.display = 'block';
+
+        // Disable the Apply button during typing
+        const applyButton = document.querySelector('.btn-success');
+        applyButton.disabled = true;
+
+        let index = 0;
+        const speed = 10; // Speed of typing effect in milliseconds
+
+        function typeWriter() {
+          if (index < text.length) {
+            confirmationContainer.innerHTML += text.charAt(index);
+            index++;
+            setTimeout(typeWriter, speed);
+          } else {
+            // Enable the Apply button after typing is complete
+            applyButton.disabled = false;
+          }
+        }
+
+        typeWriter(); // Start the typewriter effect
+      }
+
+      /**
+       * Switches the sidebar back to Prompt Mode, hiding the confirmation buttons and showing the prompt.
+       */
+      function cancel() {
+        document.getElementById('confirmationMode').style.display = 'none';
+        document.getElementById('promptMode').style.display = 'block';
+        document.getElementById('thinkingMode').style.display = 'none'; // Hide thinking mode if cancelled
       }
     </script>
   </head>
@@ -36,14 +93,32 @@
       <button class="btn btn-light float-right mb-2" onclick="refresh()" title="Refresh Sidebar">
         <i class="fas fa-sync-alt"></i>
       </button>
-      <h2 class="text-left mt-4 mb-3">gSheetAgent</h2>
-      <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
-      <textarea class="form-control" rows="8" placeholder="Enter your wishes here..."></textarea>
-      <button class="btn btn-primary btn-block mt-3" onclick="submitChanges()">Submit</button>
-      <div class="mt-3">
-        <div class="btn-group btn-group-justified w-100">
-          <button class="btn btn-success" onclick="applyChanges()"><strong>Apply</strong></button>
-          <button class="btn btn-secondary" onclick="cancel()">Cancel</button>
+      <h2 class="text-left mt-4 mb-4">gSheetAgent</h2>
+      
+      <!-- Prompt Mode -->
+      <div id="promptMode">
+        <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
+        <textarea class="form-control" rows="8" placeholder="Enter your wishes here..."></textarea>
+        <button class="btn btn-primary btn-block mt-3" onclick="submitPrompt()">Submit</button>
+      </div>
+
+      <!-- Thinking Mode -->
+      <div id="thinkingMode" style="display: none;" class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status" style="width: 100px; height: 100px; margin-top: 50px;">
+        </div>
+        <p class="text-center mt-3">Thinking...</p>
+      </div>
+
+      <!-- Confirmation Mode -->
+      <div id="confirmationMode" style="display: none;">
+        <div class="mt-3" style="height: 400px; overflow-y: auto;">
+          <div id="confirmationText"></div> <!-- Container for confirmation text -->
+        </div>
+        <div class="mt-3">
+          <div class="btn-group btn-group-justified w-100">
+            <button class="btn btn-success" onclick="applyChanges()"><strong>Apply</strong></button>
+            <button class="btn btn-secondary" onclick="cancel()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
