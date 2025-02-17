@@ -34,6 +34,13 @@
       }
 
       /**
+       * Clears the textarea content.
+       */
+      function clearTextarea() {
+        document.querySelector('textarea').value = '';
+      }
+
+      /**
        * Switches the sidebar to Confirmation Mode, hiding the prompt and showing the confirmation buttons.
        */
       function submitPrompt() {
@@ -41,18 +48,39 @@
         document.getElementById('promptMode').style.display = 'none';
         document.getElementById('thinkingMode').style.display = 'block';
 
-        // Simulate a delay for the thinking mode
-        setTimeout(function() {
+        // Get the user input from the textarea
+        const instruction = document.querySelector('textarea').value;
+
+        // Send a POST request to the /prompt/text endpoint
+        fetch('http://localhost:5000/prompt/text', { // Adjust the URL as needed
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ instruction: instruction })
+        })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('Success:', data);
           document.getElementById('thinkingMode').style.display = 'none';
-          showConfirmationText("Your confirmation message will appear here. This area can display a lot of information. Additional details can be added here as needed. More information can be displayed in this scrollable area.");
-        }, 3000); // 3 seconds delay
+          showConfirmationText(data.received_instruction); // Display the received instruction
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          alert('There was an error processing your request.');
+        });
       }
 
       /**
        * Displays the confirmation text with a typewriter effect.
        * @param {string} text - The text to display in the confirmation area.
        */
-      function showConfirmationText(text) {
+      function showConfirmationText(htmlString) {
         const confirmationContainer = document.getElementById('confirmationText');
         confirmationContainer.innerHTML = ''; // Clear previous text
         document.getElementById('confirmationMode').style.display = 'block';
@@ -61,21 +89,46 @@
         const applyButton = document.querySelector('.btn-success');
         applyButton.disabled = true;
 
-        let index = 0;
+        // Create a virtual DOM structure
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlString, 'text/html');
+        const elements = Array.from(doc.body.childNodes);
+
+        let currentIndex = 0;
         const speed = 10; // Speed of typing effect in milliseconds
 
-        function typeWriter() {
-          if (index < text.length) {
-            confirmationContainer.innerHTML += text.charAt(index);
-            index++;
-            setTimeout(typeWriter, speed);
+        function typeWriter(element) {
+          if (element.nodeType === Node.TEXT_NODE) {
+            const text = element.textContent;
+            let charIndex = 0;
+
+            function typeChar() {
+              if (charIndex < text.length) {
+                confirmationContainer.innerHTML += text.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeChar, speed);
+              } else {
+                // Move to the next element after finishing the current one
+                currentIndex++;
+                if (currentIndex < elements.length) {
+                  typeWriter(elements[currentIndex]);
+                } else {
+                  // Enable the Apply button after typing is complete
+                  applyButton.disabled = false;
+                }
+              }
+            }
+
+            typeChar(); // Start typing the current text node
           } else {
-            // Enable the Apply button after typing is complete
-            applyButton.disabled = false;
+            // If it's an element node, process its children
+            Array.from(element.childNodes).forEach(child => {
+              typeWriter(child);
+            });
           }
         }
 
-        typeWriter(); // Start the typewriter effect
+        typeWriter(elements[currentIndex]); // Start the typewriter effect
       }
 
       /**
@@ -88,9 +141,9 @@
       }
     </script>
   </head>
-  <body style="background-color: #F0F4F9;">
-    <div class="container">
-      <button class="btn btn-light float-right mb-2" onclick="refresh()" title="Refresh Sidebar">
+  <body style="background-color: #F0F4F9; min-height: 100vh; display: flex; flex-direction: column;">
+    <div class="container flex-grow-1">
+      <button class="btn btn-light btn-sm" style="position: absolute; right: 0px; top: 0px;" onclick="refresh()" title="Refresh Sidebar">
         <i class="fas fa-sync-alt"></i>
       </button>
       <h2 class="text-left mt-4 mb-4">gSheetAgent</h2>
@@ -98,7 +151,12 @@
       <!-- Prompt Mode -->
       <div id="promptMode">
         <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
-        <textarea class="form-control" rows="8" placeholder="Enter your wishes here..."></textarea>
+        <div style="position: relative;">
+          <button class="btn btn-link p-0" style="position: absolute; top: 5px; right: 10px; background-color: transparent; color: gray;" onclick="clearTextarea()">
+            <i class="fas fa-trash"></i>
+          </button>
+          <textarea id="instruction" class="form-control" rows="8" placeholder="Enter your wishes here..." style="padding-right: 40px;"></textarea>
+        </div>
         <button class="btn btn-primary btn-block mt-3" onclick="submitPrompt()">Submit</button>
       </div>
 
@@ -122,6 +180,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-4" style="color: lightgrey; font-size: 0.8em; position: relative; bottom: 0; width: 100%;">
+      <p>Built with &hearts; by Mohsen Hadianfard</p>
+    </footer>
+
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

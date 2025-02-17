@@ -31,4 +31,5 @@ if not SPREADSHEET_ID:
 # Paths for ScriptUploader
 SCRIPT_ID_FILE = BASE_DIR / 'script_id.txt'
 TOKEN_FILE = BASE_DIR / 'token.json' 
+LLM_INSTRUCTION_FILE = BASE_DIR / 'llm_instruction.txt'
 GAS_DIRECTORY = BASE_DIR / 'gas'
