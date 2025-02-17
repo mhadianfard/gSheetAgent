@@ -77,22 +77,30 @@ class ScriptUploader:
             }
         ]
 
-        # Add all files from the 'gas' directory
+        # Add all files from the 'gas' directory and its subfolders
         gas_directory = GAS_DIRECTORY
-        for filename in os.listdir(gas_directory):
-            filepath = os.path.join(gas_directory, filename)
-            if os.path.isfile(filepath):
-                with open(filepath, 'r') as file:
-                    file_content = file.read()
-                    file_type = 'SERVER_JS' if filename.endswith('.js') else 'JSON'
-                    files.append({
-                        'name': os.path.splitext(filename)[0],  # Get filename without extension
-                        'type': file_type,
-                        'source': file_content
-                    })
-
-        # Debug: Print the files array to the console
-        print("Files array:", files)
+        
+        for root, _, filenames in os.walk(gas_directory):  # Use os.walk to traverse subfolders
+            for filename in filenames:
+                filepath = os.path.join(root, filename)
+                if os.path.isfile(filepath):
+                    with open(filepath, 'r') as file:
+                        file_content = file.read()
+                        if filename.endswith('.html'):
+                            file_type = 'HTML'
+                        elif filename.endswith('.js'):
+                            file_type = 'SERVER_JS'
+                        elif filename.endswith('.json'):
+                            file_type = 'JSON'
+                        else:
+                            file_type = 'UNKNOWN'
+                        # Use relative path for the name to maintain folder structure
+                        relative_name = os.path.relpath(filepath, gas_directory)
+                        files.append({
+                            'name': os.path.splitext(relative_name)[0],  # Get filename without extension
+                            'type': file_type,
+                            'source': file_content
+                        })
 
         # Create the request body
         request = {'files': files}

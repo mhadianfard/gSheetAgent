@@ -4,14 +4,18 @@
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
   ui.createMenu('gSheetAgent')
-    .addItem('Open', 'doNothing')
+    .addItem('Open', 'showSidebar')
+    .addItem('Trigger', 'performAction')
     .addToUi();
 }
 
 /**
- * A placeholder function that currently does nothing.
- * This can be expanded in the future to perform specific actions.
+ * Shows a sidebar in the Google Sheets UI.
  */
-function doNothing() {
-  // This function currently does nothing.
+function showSidebar() {
+  var html = HtmlService.createTemplateFromFile('sidebar')
+      .evaluate()
+      .setTitle('gSheetAgent');
+  SpreadsheetApp.getUi().showSidebar(html);
 }
+

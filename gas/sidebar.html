@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <script>
+      /**
+       * Triggers the performAction function in the Google Apps Script.
+       * This function handles success and failure responses from the script.
+       */
+      function trigger() {
+        google.script.run
+            .withSuccessHandler(function(response) {
+                // Handle success response if needed
+                console.log('Action performed successfully:', response);
+            })
+            .withFailureHandler(function(error) {
+                // Check if the error message contains "Permission Denied"
+                if (error.message.includes("PERMISSION_DENIED")) {
+                    window.alert('Permission Denied: Please make sure you are not logged into more than one Google account in this browser.');
+                } else {
+                    window.alert('Error: ' + error.message);
+                }
+            })
+            .performAction();
+        }
+    </script>
+  </head>
+  <body>
+    <h1>gSheetAgent</h1>
+    <button onclick="trigger()">Trigger</button>
+  </body>
+</html> 
