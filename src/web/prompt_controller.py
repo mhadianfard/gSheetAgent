@@ -37,8 +37,8 @@ def receive_instruction():
         print("Failed to decode JSON:", e)
         # Handle the error appropriately
     
-    received_instruction = base64.b64decode(response_json.get('explanation', '')).decode('utf-8') or 'No explanation provided'
-    received_code = base64.b64decode(response_json.get('code', '')).decode('utf-8') or ''
+    received_instruction = response_json.get('explanation', 'No explanation provided')
+    received_code = response_json.get('code', '')
 
     uploader = ScriptUploader()
     try:

@@ -20,7 +20,7 @@ def main():
     """
     uploader = ScriptUploader()
     code_content = f"""
-    function timestamp() {{
+    function performAction() {{
         const ui = SpreadsheetApp.getUi();
         ui.alert('This script was last generated at {datetime.datetime.now().strftime('%I:%M%p').lower()}');
     }}

@@ -77,58 +77,17 @@
       }
 
       /**
-       * Displays the confirmation text with a typewriter effect.
-       * @param {string} text - The text to display in the confirmation area.
+       * Displays the confirmation text as HTML.
+       * @param {string} htmlString - The HTML string to display in the confirmation area.
        */
       function showConfirmationText(htmlString) {
-        const confirmationContainer = document.getElementById('confirmationText');
-        confirmationContainer.innerHTML = ''; // Clear previous text
-        document.getElementById('confirmationMode').style.display = 'block';
+          const confirmationContainer = document.getElementById('confirmationText');
+          confirmationContainer.innerHTML = '<p><strong>Here\'s what I\'ll be doing: </strong></p>' + htmlString; // Set the inner HTML directly
+          document.getElementById('confirmationMode').style.display = 'block';
 
-        // Disable the Apply button during typing
-        const applyButton = document.querySelector('.btn-success');
-        applyButton.disabled = true;
-
-        // Create a virtual DOM structure
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(htmlString, 'text/html');
-        const elements = Array.from(doc.body.childNodes);
-
-        let currentIndex = 0;
-        const speed = 10; // Speed of typing effect in milliseconds
-
-        function typeWriter(element) {
-          if (element.nodeType === Node.TEXT_NODE) {
-            const text = element.textContent;
-            let charIndex = 0;
-
-            function typeChar() {
-              if (charIndex < text.length) {
-                confirmationContainer.innerHTML += text.charAt(charIndex);
-                charIndex++;
-                setTimeout(typeChar, speed);
-              } else {
-                // Move to the next element after finishing the current one
-                currentIndex++;
-                if (currentIndex < elements.length) {
-                  typeWriter(elements[currentIndex]);
-                } else {
-                  // Enable the Apply button after typing is complete
-                  applyButton.disabled = false;
-                }
-              }
-            }
-
-            typeChar(); // Start typing the current text node
-          } else {
-            // If it's an element node, process its children
-            Array.from(element.childNodes).forEach(child => {
-              typeWriter(child);
-            });
-          }
-        }
-
-        typeWriter(elements[currentIndex]); // Start the typewriter effect
+          // Enable the Apply button after displaying the confirmation
+          const applyButton = document.querySelector('.btn-success');
+          applyButton.disabled = false;
       }
 
       /**

@@ -6,13 +6,14 @@ class LLMClient:
         self.client = OpenAI(api_key=OPENAI_API_KEY)
     
     def get_apps_script_code(self, prompt):
-        try:
+        try:            
             response = self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": open(LLM_INSTRUCTION_FILE).read()},
-                    {"role": "user", "content": prompt}
-                ]
+                    {"role": "user", "content": f"```{prompt}```"}
+                ],
+                response_format={"type": "json_object"}
             )
             return response.choices[0].message.content
         
