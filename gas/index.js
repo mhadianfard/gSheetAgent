@@ -12,7 +12,7 @@ function onOpen() {
  * Shows a sidebar in the Google Sheets UI.
  */
 function showSidebar() {
-  var html = HtmlService.createTemplateFromFile('sidebar')
+  var html = HtmlService.createTemplateFromFile('sidebar/content')
       .evaluate()
       .setTitle('gSheetAgent');
   SpreadsheetApp.getUi().showSidebar(html);
