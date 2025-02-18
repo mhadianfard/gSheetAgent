@@ -18,6 +18,10 @@ function showSidebar() {
   SpreadsheetApp.getUi().showSidebar(html);
 }
 
+function displayToast(message) {
+  SpreadsheetApp.getActive().toast(message);
+}
+
 /**
  * Refreshes the sidebar content.
  */
