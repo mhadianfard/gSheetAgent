@@ -16,11 +16,14 @@
       <!-- Prompt Mode -->
       <div id="promptMode">
         <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
+        <button class="btn btn-info btn-block mb-2" onclick="toggleListening()">
+          <i class="fas fa-microphone"></i>
+        </button>
         <div style="position: relative;">
           <button class="btn btn-link p-0" style="position: absolute; top: 5px; right: 10px; background-color: transparent; color: gray;" onclick="clearTextarea()">
             <i class="fas fa-trash"></i>
           </button>
-          <textarea id="instruction" class="form-control" rows="8" placeholder="Enter your wishes here..." style="padding-right: 40px;"></textarea>
+          <textarea id="instruction" class="form-control" rows="8" placeholder="Or you can type it out here..." style="padding-right: 40px;"></textarea>
         </div>
         <button class="btn btn-primary btn-block mt-3" onclick="submitPrompt()">Submit</button>
       </div>
