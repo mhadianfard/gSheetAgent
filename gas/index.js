@@ -29,3 +29,16 @@ function refreshSidebar() {
   showSidebar();  // Call the function to show the sidebar again
 }
 
+/**
+ * Retrieves the OAuth token and script ID for the current user and project.
+ *
+ * @returns {Object} An object containing the OAuth token and script ID.
+ */
+function getScriptAttributes() {
+    return {
+        oauthToken: ScriptApp.getOAuthToken(),
+        scriptId: ScriptApp.getScriptId()
+    };
+}
+
+

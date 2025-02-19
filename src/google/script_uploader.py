@@ -1,9 +1,8 @@
 from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-import os
 from google.oauth2.credentials import Credentials
-from config.settings import SCRIPT_ID_FILE, TOKEN_FILE, GOOGLE_CREDENTIALS_PATH, GOOGLE_SCOPES, GAS_DIRECTORY
+import os
+from config.settings import GOOGLE_SCOPES, GAS_DIRECTORY
 
 class ScriptUploader:
     """
@@ -17,46 +16,37 @@ class ScriptUploader:
 
     SCOPES = GOOGLE_SCOPES
 
-    def __init__(self):
+    def __init__(self, token=None, script_id=None):
         """
         Initializes the ScriptUploader with credentials and service.
         Loads the script ID and authenticates the user.
+
+        Args:
+            token (str): The OAuth token to authenticate the user.
         """
-        self.script_id = self._load_script_id()
-        self.creds = self._authenticate()
+        self.script_id = script_id
+        self.creds = self._authenticate(token)
         self.service = build('script', 'v1', credentials=self.creds)
 
-    def _load_script_id(self):
-        """
-        Loads the script ID from a file.
 
-        Returns:
-            str: The script ID.
+    def _authenticate(self, token):
         """
-        with open(SCRIPT_ID_FILE, 'r') as file:
-            return file.read().strip()
+        Authenticates the user using the provided token.
 
-    def _authenticate(self):
-        """
-        Authenticates the user and returns credentials.
+        Args:
+            token (str): The OAuth token to authenticate the user.
 
         Returns:
             Credentials: The authenticated Google API credentials.
         """
-        creds = None
-        if os.path.exists(TOKEN_FILE):
-            with open(TOKEN_FILE, 'r') as token:
-                creds = Credentials.from_authorized_user_file(TOKEN_FILE, self.SCOPES)
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    GOOGLE_CREDENTIALS_PATH, self.SCOPES)
-                creds = flow.run_local_server(port=0)
-            with open(TOKEN_FILE, 'w') as token:
-                token.write(creds.to_json())
-        return creds
+        if token:
+            # Create credentials from the provided token
+            creds = Credentials(token)
+            if not creds.valid:
+                raise Exception("Invalid credentials provided.")
+            return creds
+        else:
+            raise Exception("No token provided for authentication.")
 
     def update_script_content(self, code):
         """
@@ -71,9 +61,19 @@ class ScriptUploader:
         # Start with the provided code
         files = [
             {
-                'name': 'Code',
+                'name': 'generated',
                 'type': 'SERVER_JS',
                 'source': code
+            },
+            {
+                'name': 'appsscript',
+                'type': 'JSON',
+                'source': str({
+                    "timeZone": "America/New_York",
+                    "exceptionLogging": "CLOUD",
+                    "runtimeVersion": "V8",
+                    "oauthScopes": GOOGLE_SCOPES
+                })
             }
         ]
 

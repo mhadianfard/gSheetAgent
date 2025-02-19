@@ -126,28 +126,35 @@
         // Get the user input from the textarea
         const instruction = document.querySelector('textarea').value;
 
-        // Send a POST request to the /prompt/text endpoint
-        fetch('http://localhost:5000/prompt/text', { // Adjust the URL as needed
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ instruction: instruction })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Success:', data);            
-            enterConfirmationMode(data.received_instruction); // Display the received instruction
-        })
-        .catch((error) => {
-            console.error('Error:', error);
+        // Get the OAuth token
+        google.script.run.withSuccessHandler(function(scriptAttributes) {
+            // Send a POST request to the /prompt/text endpoint
+            fetch('http://localhost:5000/prompt/text', { // Adjust the URL as needed
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${scriptAttributes.oauthToken}`
+                },
+                body: JSON.stringify({ instruction: instruction, scriptId: scriptAttributes.scriptId })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);            
+                enterConfirmationMode(data.received_instruction); // Display the received instruction
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was an error processing your request.');
+            });
+        }).withFailureHandler(function(error) {
+            console.error('Error getting OAuth token:', error);
             alert('There was an error processing your request.');
-        });
+        }).getScriptAttributes();
     }
     
     /**
