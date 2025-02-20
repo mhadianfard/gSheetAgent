@@ -47,13 +47,18 @@ def receive_instruction():
 
     try:
         response = uploader.update_script_content(received_code)
-        # Check if the response indicates success
         if 'error' in response:
-            print(f"Error: {response['error']}")
-        else:
-            print("Upload Successful!")  # Print a success message
+            raise Exception(response['error'])
     except Exception as e:
-        print(f"An error occurred: {e}")
+        error_message = str(e)
+        # Check if the error message contains the specific error
+        if 'ACCESS_TOKEN_SCOPE_INSUFFICIENT' in error_message:
+            user_message = "This document hasn't been properly authorized to do an end-to-end automation. Please reinstall the add-on."
+        else:
+            user_message = error_message  # Use the original error message for other errors
 
-    # Return the generated response
+        print(f"An error occurred: {error_message}")
+        return jsonify({'error': user_message}), 500
+    
+    print("Upload Successful!")  # Print a success message
     return jsonify({'received_instruction': received_instruction}), 200

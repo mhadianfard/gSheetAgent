@@ -18,8 +18,10 @@ if not OPENAI_API_KEY:
 GOOGLE_CREDENTIALS_PATH = BASE_DIR / 'credentials.json'
 GOOGLE_TOKEN_PATH = BASE_DIR / 'token.json'
 GOOGLE_SCOPES = [
+    'https://www.googleapis.com/auth/script.container.ui',
     'https://www.googleapis.com/auth/script.projects',
-    'https://www.googleapis.com/auth/drive.file'
+    # 'https://www.googleapis.com/auth/drive.file',
+    'https://www.googleapis.com/auth/spreadsheets.currentonly',
 ]
 
 # Get Spreadsheet ID from environment

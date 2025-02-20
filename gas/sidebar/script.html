@@ -145,11 +145,14 @@
             })
             .then(data => {
                 console.log('Success:', data);            
-                enterConfirmationMode(data.received_instruction); // Display the received instruction
+                const receivedInstructions = Array.isArray(data.received_instruction) 
+                    ? '<ul>' + data.received_instruction.map(item => `<li>${item}</li>`).join('') + '</ul>' 
+                    : data.received_instruction;
+                enterConfirmationMode(receivedInstructions); // Display the received instruction
             })
             .catch((error) => {
                 console.error('Error:', error);
-                alert('There was an error processing your request.');
+                alert('There was an error processing your request: ' + error.message);
             });
         }).withFailureHandler(function(error) {
             console.error('Error getting OAuth token:', error);
@@ -170,6 +173,7 @@
             .withSuccessHandler(function(response) {
                 enterPromptMode();
                 google.script.run.displayToast('Changes applied successfully!');
+                clearTextarea();
             })
             .withFailureHandler(function(error) {
                 // Check if the error message contains "Permission Denied"

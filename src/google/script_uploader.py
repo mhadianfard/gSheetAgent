@@ -1,3 +1,4 @@
+import json
 from googleapiclient.discovery import build
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -68,7 +69,7 @@ class ScriptUploader:
             {
                 'name': 'appsscript',
                 'type': 'JSON',
-                'source': str({
+                'source': json.dumps({
                     "timeZone": "America/New_York",
                     "exceptionLogging": "CLOUD",
                     "runtimeVersion": "V8",

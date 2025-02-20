@@ -41,4 +41,12 @@ function getScriptAttributes() {
     };
 }
 
+/**
+ * Will force a re-authentication of the script.
+ */
+function forceReauthentication() {
+  let spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  let scriptId = ScriptApp.getProjectKey();
+  console.log(scriptId);
+}
 
