@@ -3,8 +3,10 @@
  */
 function onOpen() {
   var ui = SpreadsheetApp.getUi();
-  ui.createMenu('gSheetAgent')
+  ui.createMenu('gSheetAgent 🤖')
     .addItem('Open', 'showSidebar')
+    .addSeparator() // Added separator
+    .addItem('Re-authenticate', 'forceReauthentication')
     .addToUi();
 }
 
@@ -47,6 +49,8 @@ function getScriptAttributes() {
 function forceReauthentication() {
   let spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let scriptId = ScriptApp.getProjectKey();
-  console.log(scriptId);
+  console.log("Spreadsheet ID: " + spreadsheet.getId());
+  console.log("Script ID: " + scriptId);
+  SpreadsheetApp.getUi().alert("You should have up-to-date authorization at this stage.");
 }
 
