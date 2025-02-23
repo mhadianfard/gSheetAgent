@@ -6,7 +6,7 @@ function onOpen() {
   ui.createMenu('gSheetAgent 🤖')
     .addItem('Open', 'showSidebar')
     .addSeparator() // Added separator
-    .addItem('Re-authenticate', 'forceReauthentication')
+    .addItem('Setup', 'setup')
     .addToUi();
 }
 
@@ -46,7 +46,7 @@ function getScriptAttributes() {
 /**
  * Will force a re-authentication of the script.
  */
-function forceReauthentication() {
+function setup() {
   let spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
   let scriptId = ScriptApp.getProjectKey();
   console.log("Spreadsheet ID: " + spreadsheet.getId());

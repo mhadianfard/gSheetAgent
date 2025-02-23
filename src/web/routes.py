@@ -1,9 +1,9 @@
 import json
+import os  # Import os to handle file paths
 from src.google.script_manager import ScriptManager
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from src.llm.openai_client import LLMClient  # Import the LLMClient
-from config.settings import get_default_dynamic_script
 
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
@@ -72,28 +72,32 @@ def receive_instruction():
 
 
 
-@app.route('/script/create', methods=['POST'])
-def create_script():
-    data = request.get_json()        
-    if 'spreadsheet_id' not in data:
-        return jsonify({'error': 'spreadsheet_id must be provided'}), 400
-    spreadsheet_id = data['spreadsheet_id']
-
-    token = get_authorization_token()
-    if not token:
-        return jsonify({'error': 'Unauthorized'}), 401
+@app.route('/setup', methods=['GET'])
+def setup():
+    # Read the contents of setup.js from the filesystem
+    js_file_path = os.path.join(os.path.dirname(__file__), 'templates', 'setup.js')
+    with open(js_file_path, 'r') as js_file:
+        js_content = js_file.read()
 
     try:
-        manager = ScriptManager(token=token)  # Initialize your ScriptManager
-        response = manager.create_script(spreadsheet_id)  # Call the create_script method
-        script_id = response['scriptId']
-        manager.update_script_content(script_id, get_default_dynamic_script())
+        data = request.args
+        if 'authToken' not in data or 'scriptId' not in data:
+            raise Exception('authToken and scriptId must be provided')
+        auth_token = data['authToken']
+        script_id = data['scriptId']
 
+        manager = ScriptManager(token=auth_token)  # Initialize your ScriptManager
+        response = manager.update_script_content(script_id)
         if 'error' in response:
             raise Exception(response['error'])
 
-        return jsonify({'message': 'Script created successfully', 'script_id': response['scriptId']}), 201
-
     except Exception as e:
         print(f"An error occurred: {e}")
-        return jsonify({'error': str(e)}), 500 
+        if 'SERVICE_DISABLED' in str(e):
+            # @todo provide better instructions here:
+            user_message = "The Apps Script API has not been enabled for this project. Please enable it by visiting the Google Developers Console."
+            js_content = js_content.replace("failureMessage = ''", f"failureMessage = '{user_message}'")
+        else:
+            js_content = js_content.replace("failureMessage = ''", f"failureMessage = '{e}'")
+    
+    return Response(js_content, mimetype='application/javascript')

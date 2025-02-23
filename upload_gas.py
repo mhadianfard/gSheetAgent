@@ -1,8 +1,9 @@
 import os
+import datetime
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from google.script_manager import ScriptManager
+from src.google.script_manager import ScriptManager
 from config.settings import TOKEN_FILE, GOOGLE_CREDENTIALS_PATH, GOOGLE_SCOPES, SCRIPT_ID_FILE, get_default_dynamic_script
 
 def main():

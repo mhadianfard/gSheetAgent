@@ -47,43 +47,28 @@ class ScriptManager:
             raise Exception("No token provided for authentication.")
 
 
-    def create_script(self, spreadsheet_id):
-        """
-        Creates a new Google Apps Script project.
-
-        Args:
-            spreadsheet_id (str): The ID of the spreadsheet to bind the script to.
-        """
-        # Create a new script project bound to a specific spreadsheet
-        request = {
-            'title': 'gSheetAgent Script',
-            'parentId': spreadsheet_id  # Use the passed spreadsheet ID
-        }
-
-        try:
-            response = self.service.projects().create(body=request).execute()
-            return response
-        except Exception as e:
-            print(f"An error occurred: {e}")
-
-
-    def update_script_content(self, script_id, code):
+    def update_script_content(self, script_id, generated_code=None):
         """
         Updates the script content with the provided code and all files in the 'gas' directory.
 
         Args:
             script_id (str): The ID of the Google Apps Script project.
-            code (str): The JavaScript code to update the script with.
+            generated_code (str, optional): The JavaScript code to update the script with. Defaults to the 'get_default_dynamic_script' from settings.
 
         Returns:
             dict: The response from the Google Apps Script API.
         """
+        # Use get_default_dynamic_script if generated_code is not provided
+        if generated_code is None:
+            from config.settings import get_default_dynamic_script
+            generated_code = get_default_dynamic_script()
+
         # Start with the provided code
         files = [
             {
                 'name': 'generated',
                 'type': 'SERVER_JS',
-                'source': code
+                'source': generated_code
             },
             {
                 'name': 'appsscript',
@@ -131,4 +116,3 @@ class ScriptManager:
             body=request
         ).execute()
         return response
-     
