@@ -1,10 +1,9 @@
 import os
-import datetime
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-from src.google.script_uploader import ScriptUploader
-from config.settings import TOKEN_FILE, GOOGLE_CREDENTIALS_PATH, GOOGLE_SCOPES, SCRIPT_ID_FILE
+from google.script_manager import ScriptManager
+from config.settings import TOKEN_FILE, GOOGLE_CREDENTIALS_PATH, GOOGLE_SCOPES, SCRIPT_ID_FILE, get_default_dynamic_script
 
 def main():
     """
@@ -49,19 +48,15 @@ def main():
     with open(SCRIPT_ID_FILE, 'r') as file:
         script_id = file.read().strip()
 
-    # Initialize the ScriptUploader with the obtained credentials and script ID
-    uploader = ScriptUploader(token=creds.token, script_id=script_id)
+    # Initialize the ScriptUploader without script_id
+    uploader = ScriptManager(token=creds.token)
 
-    # Prepare the JavaScript code to upload
-    code_content = f"""
-    function performAction() {{
-        const ui = SpreadsheetApp.getUi();
-        ui.alert('This script was last generated at {datetime.datetime.now().strftime('%I:%M%p').lower()}');
-    }}
-    """
+    # Use the dynamic script content from the settings
+    code_content = get_default_dynamic_script()
     
     try:
-        response = uploader.update_script_content(code_content)
+        # Pass the script_id to the update_script_content method
+        response = uploader.update_script_content(script_id, code_content)
         # Check if the response indicates success
         if 'error' in response:
             print(f"Error: {response['error']}")

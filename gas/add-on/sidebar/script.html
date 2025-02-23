@@ -1,0 +1,42 @@
+<script>
+    function installDynamicScript() {
+        // Get the app variables (spreadsheet ID and auth token)
+        google.script.run.withSuccessHandler(function(appVariables) {
+            // Make the POST request to the server
+            const url = 'http://localhost:5000/script/create'; // Replace with your server URL
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${appVariables.authToken}`
+                },
+                body: JSON.stringify({ spreadsheet_id: appVariables.spreadsheetId })
+            };
+
+            fetch(url, options)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    // Hide the thinking mode and show the success alert
+                    document.getElementById('thinkingMode').style.display = 'none';
+                    document.getElementById('successAlert').style.display = 'block';
+                    // Store the script ID in the Script Properties
+                    google.script.run.storeDynamicScriptID(data.script_id);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // Hide the thinking mode and show the failure alert
+                    document.getElementById('thinkingMode').style.display = 'none';
+                    document.getElementById('failureAlert').style.display = 'block';
+                    document.getElementById('failureMessage').textContent = error.message;
+                });
+        }).getAppVariables();
+    }
+
+    // Call installDynamicScript as soon as the sidebar loads
+    window.onload = function() {
+        installDynamicScript();
+    };
+</script>

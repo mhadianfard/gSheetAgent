@@ -129,7 +129,7 @@
         // Get the OAuth token
         google.script.run.withSuccessHandler(function(scriptAttributes) {
             // Send a POST request to the /prompt/text endpoint
-            fetch('http://localhost:5000/prompt/text', { // Adjust the URL as needed
+            fetch('http://localhost:5000/prompt', { // Adjust the URL as needed
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

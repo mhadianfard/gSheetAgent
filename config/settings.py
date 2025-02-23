@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import datetime
 
 # Get the base directory of our project
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,14 +25,22 @@ GOOGLE_SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets.currentonly',
 ]
 
-# Get Spreadsheet ID from environment
-SPREADSHEET_ID = os.getenv('SPREADSHEET_ID')
-
-if not SPREADSHEET_ID:
-    raise Exception("SPREADSHEET_ID not found in .env file")
-
-# Paths for ScriptUploader
 SCRIPT_ID_FILE = BASE_DIR / 'script_id.txt'
 TOKEN_FILE = BASE_DIR / 'token.json' 
 LLM_INSTRUCTION_FILE = BASE_DIR / 'llm_instruction.txt'
-GAS_DIRECTORY = BASE_DIR / 'gas'
+GAS_DYNAMIC_DIRECTORY = BASE_DIR / 'gas/dynamic'
+
+def get_default_dynamic_script():
+    """
+    Generates the JavaScript code for the performAction function with the current timestamp.
+
+    Returns:
+        str: The JavaScript code to upload.
+    """
+    current_time = datetime.datetime.now().strftime('%I:%M%p').lower()
+    return f"""
+    function performAction() {{
+        const ui = SpreadsheetApp.getUi();
+        ui.alert('This script was last generated at {current_time}');
+    }}
+    """

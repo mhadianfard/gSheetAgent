@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <?!= HtmlService.createHtmlOutputFromFile('sidebar/script').getContent(); ?>
+
+</head>
+    <body style="background-color: #F0F4F9; min-height: 100vh; display: flex; flex-direction: column;">
+        <div class="container flex-grow-1">        
+            <h2 class="text-left mt-4 mb-4">gSheetAgent</h2>
+            
+          <!-- Thinking Mode -->
+          <div id="thinkingMode" class="text-center mt-5">
+            <div class="spinner-border text-primary" role="status" style="width: 100px; height: 100px; margin-top: 50px;">
+            </div>
+            <p id="thinkingLabel" class="text-center mt-3">Installing the Dynamic Script...</p>
+          </div>
+
+          <!-- Success Alert -->
+          <div id="successAlert" class="alert alert-success" style="display: none;" role="alert">
+            <p>The gSheetAgent dynamic script component was installed successfully. </p>
+            <p>Please refresh your browser and check the gSheetAgent menu again for the prompt capability.</p>
+          </div>
+
+          <!-- Failure Alert -->
+          <div id="failureAlert" class="alert alert-danger" style="display: none;" role="alert">
+            <p>Failed to install the gSheetAgent dynamic script component:</p>
+            <p id="failureMessage"></p>
+          </div>
+        </div>
+    </body>
+</html> 
