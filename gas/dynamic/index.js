@@ -32,14 +32,18 @@ function refreshSidebar() {
 }
 
 /**
- * Retrieves the OAuth token and script ID for the current user and project.
+ * Retrieves the OAuth token, script ID, and timezone for the current user and project.
  *
- * @returns {Object} An object containing the OAuth token and script ID.
+ * @returns {Object} An object containing the OAuth token, script ID, and timezone.
+ * @property {string} oauthToken - The OAuth token for the current user.
+ * @property {string} scriptId - The ID of the current script.
+ * @property {string} timezone - The timezone of the active spreadsheet.
  */
 function getScriptAttributes() {
     return {
         oauthToken: ScriptApp.getOAuthToken(),
-        scriptId: ScriptApp.getScriptId()
+        scriptId: ScriptApp.getScriptId(),
+        timezone: SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone()
     };
 }
 

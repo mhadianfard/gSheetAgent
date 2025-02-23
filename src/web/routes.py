@@ -22,8 +22,8 @@ def receive_instruction():
     Receives a JSON payload with an 'instruction' string and generates a response using LLMClient.
     """
     data = request.get_json()        
-    if 'instruction' not in data or 'scriptId' not in data:
-        return jsonify({'error': 'Instruction or Script ID not provided'}), 400
+    if 'instruction' not in data or 'scriptId' not in data or 'timezone' not in data:
+        return jsonify({'error': 'Instruction, Script ID or Timezone not provided'}), 400
 
     token = get_authorization_token()
     if not token:
@@ -53,7 +53,7 @@ def receive_instruction():
 
     try:
         # Pass the script_id to the update_script_content method
-        response = uploader.update_script_content(script_id, received_code)
+        response = uploader.update_script_content(script_id, received_code, timezone)
         if 'error' in response:
             raise Exception(response['error'])
     except Exception as e:

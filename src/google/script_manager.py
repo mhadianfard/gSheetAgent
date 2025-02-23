@@ -47,7 +47,7 @@ class ScriptManager:
             raise Exception("No token provided for authentication.")
 
 
-    def update_script_content(self, script_id, generated_code=None):
+    def update_script_content(self, script_id, generated_code=None, timezone="America/New_York"):
         """
         Updates the script content with the provided code and all files in the 'gas' directory.
 
@@ -74,7 +74,7 @@ class ScriptManager:
                 'name': 'appsscript',
                 'type': 'JSON',
                 'source': json.dumps({
-                    "timeZone": "America/New_York",
+                    "timeZone": timezone,
                     "exceptionLogging": "CLOUD",
                     "runtimeVersion": "V8",
                     "oauthScopes": GOOGLE_SCOPES
