@@ -4,9 +4,17 @@ from src.google.script_manager import ScriptManager
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from src.llm.openai_client import LLMClient  # Import the LLMClient
+from config.settings import CORS_ORIGIN  # Import the CORS origin from settings
 
 app = Flask(__name__)
-CORS(app)  # This will enable CORS for all routes
+CORS(app, resources={r"/*": {"origins": CORS_ORIGIN}})  # Enable CORS for specific origins
+
+def cors_headers():
+    return {
+        'Access-Control-Allow-Origin': CORS_ORIGIN,  # Use the configuration value
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+    }
 
 def get_authorization_token():
     """Extracts the token from the Authorization header."""
@@ -100,4 +108,4 @@ def setup():
         else:
             js_content = js_content.replace("failureMessage = ''", f"failureMessage = '{e}'")
     
-    return Response(js_content, mimetype='application/javascript')
+    return Response(js_content, mimetype='application/javascript', headers=cors_headers())

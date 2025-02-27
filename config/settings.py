@@ -26,8 +26,11 @@ GOOGLE_SCOPES = [
 
 SCRIPT_ID_FILE = BASE_DIR / 'script_id.txt'
 TOKEN_FILE = BASE_DIR / 'token.json' 
-LLM_INSTRUCTION_FILE = BASE_DIR / 'llm_instruction.txt'
+LLM_INSTRUCTION_FILE = BASE_DIR / 'src/llm/llm_instruction.txt'
 GAS_DYNAMIC_DIRECTORY = BASE_DIR / 'gas/dynamic'
+
+# CORS Settings
+CORS_ORIGIN = "https://*.script.googleusercontent.com"
 
 def get_default_dynamic_script():
     """

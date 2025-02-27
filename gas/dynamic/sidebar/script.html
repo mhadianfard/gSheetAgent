@@ -129,7 +129,7 @@
         // Get the OAuth token
         google.script.run.withSuccessHandler(function(scriptAttributes) {
             // Send a POST request to the /prompt/text endpoint
-            fetch('http://localhost:5000/prompt', { // Adjust the URL as needed
+            fetch(`${scriptAttributes.serverUrl}/prompt`, { // Adjust the URL as needed
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -157,13 +157,12 @@
             .catch((error) => {
                 console.error('Error:', error);
                 alert('There was an error processing your request: ' + error.message);
+                enterPromptMode();
             });
-        }).withFailureHandler(function(error) {
-            console.error('Error getting OAuth token:', error);
-            alert('There was an error processing your request.');
-        }).getScriptAttributes();
+        }).withFailureHandler(scriptRunErrorHandler).getScriptAttributes();
     }
     
+
     /**
      * Triggers the performAction function in the Google Apps Script.
      * This function handles success and failure responses from the script.
@@ -180,12 +179,7 @@
                 clearTextarea();
             })
             .withFailureHandler(function(error) {
-                // Check if the error message contains "Permission Denied"
-                if (error.message.includes("PERMISSION_DENIED")) {
-                    window.alert('Permission Denied: Please make sure you are not logged into more than one Google account in this browser.');
-                } else {
-                    google.script.run.displayToast(error.message);
-                }
+                scriptRunErrorHandler(error);
                 enterPromptMode();                
             })
             .performAction(); // Call the function to perform the action
@@ -195,7 +189,9 @@
      * Refreshes the sidebar content by calling the refreshSidebar function in the Google Apps Script.
      */
     function refreshSidebar() {
-        google.script.run.refreshSidebar();
+        google.script.run
+            .withFailureHandler(scriptRunErrorHandler)
+            .refreshSidebar();
     }
 
     /**
@@ -210,5 +206,18 @@
      */
     function cancel() {
         enterPromptMode();
+    }
+
+    /**
+     * Handles script run errors.
+     * @param {Error} error - The error object.
+     */
+    function scriptRunErrorHandler(error) {
+        console.error(error);
+        if (error.message.includes("PERMISSION_DENIED")) {
+            window.alert("You're likely logged into two Google Accounts at the same time - which is confusing the heck out of Google. Please consider logging out of the other account or using incognito to run this app - until Google fixes their bug!");
+        } else {
+            alert('There was an error processing your request.');
+        }
     }
 </script>

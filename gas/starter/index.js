@@ -1,4 +1,27 @@
 /**
+ * Default server URL
+ */
+const DEFAULT_SERVER_URL = "https://bhnjkmdbgzzn4ftgee4cvnvzbe0tsloa.lambda-url.ca-central-1.on.aws";
+
+/**
+ * Retrieves the server URL from ScriptProperties.
+ * If it doesn't exist, creates it with the default value.
+ *
+ * @returns {string} The server URL.
+ */
+function getServerUrl() {
+    const scriptProperties = PropertiesService.getScriptProperties();
+    let serverUrl = scriptProperties.getProperty('SERVER_URL');
+
+    if (!serverUrl) {
+        serverUrl = DEFAULT_SERVER_URL;
+        scriptProperties.setProperty('SERVER_URL', serverUrl);
+    }
+
+    return serverUrl;
+}
+
+/**
  * Adds a custom menu to the Google Sheets UI when the spreadsheet is opened.
  */
 function onOpen() {
@@ -48,7 +71,7 @@ function getScriptAttributes() {
 function setup() {
     requestAuthorization();
     const scriptAttributes = getScriptAttributes();
-    const url = `http://localhost:5000/setup?authToken=${scriptAttributes.oauthToken}&scriptId=${scriptAttributes.scriptId}`;
+    const url = `${getServerUrl()}/setup?authToken=${scriptAttributes.oauthToken}&scriptId=${scriptAttributes.scriptId}`;
     const html = ''
         + '<html>'
         + '     <head>'
