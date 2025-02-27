@@ -6,7 +6,7 @@ ZIP_FILE="lambda.zip"
 
 # # Dependency installation, adjust according to your function
 # echo "Installing dependencies..."
-pip install -r requirements.txt -t .
+# pip install -r requirements.txt -t .
 
 echo "Building zip file..."
 zip -r $ZIP_FILE . -x@lambda_exclude.txt
