@@ -7,6 +7,7 @@ token.json
 __pycache__/
 *.pyc
 .venv/
+/.venv
 lambda-layer/
 
 # IDE
