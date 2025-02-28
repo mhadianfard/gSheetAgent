@@ -9,11 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Load the .env file
 load_dotenv(BASE_DIR / '.env')
 
-# Get the API key
-OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+# Get the API key from the environment first, then from the .env file
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY') or os.environ.get('OPENAI_API_KEY')
 
 if not OPENAI_API_KEY:
-    raise Exception("OPENAI_API_KEY not found in .env file")
+    raise Exception("OPENAI_API_KEY not found in environment or .env file")
 
 # Google API Settings
 GOOGLE_CREDENTIALS_PATH = BASE_DIR / 'credentials.json'

@@ -13,3 +13,5 @@ lambda-layer/
 # IDE
 .vscode/
 .idea/ 
+/.DS_Store
+/lambda_function
