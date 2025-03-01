@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <?!= HtmlService.createHtmlOutputFromFile('sidebar/script').getContent(); ?>
+  </head>
+  <body style="background-color: #F0F4F9; min-height: 100vh; display: flex; flex-direction: column;">
+    <div class="container flex-grow-1">
+      <button class="btn btn-light btn-sm" style="position: absolute; right: 0px; top: 0px;" onclick="refreshSidebar()" title="Refresh Sidebar">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <h2 class="text-left mt-4 mb-4">gSheetAgent</h2>
+      
+      <!-- Prompt Mode -->
+      <div id="promptMode">
+        <p class="text-left">Tell me what changes you want to make to this spreadsheet:</p>
+        <button class="btn btn-info btn-block mb-2" onclick="toggleListening()">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <div style="position: relative;">
+          <button class="btn btn-link p-0" style="position: absolute; top: 5px; right: 10px; background-color: transparent; color: gray;" onclick="clearTextarea()">
+            <i class="fas fa-trash"></i>
+          </button>
+          <textarea id="instruction" class="form-control" rows="8" placeholder="Or you can type it out here..." style="padding-right: 40px;"></textarea>
+        </div>
+        <button class="btn btn-primary btn-block mt-3" onclick="submitPrompt()">Submit</button>
+      </div>
+
+      <!-- Thinking Mode -->
+      <div id="thinkingMode" style="display: none;" class="text-center mt-5">
+        <div class="spinner-border text-primary" role="status" style="width: 100px; height: 100px; margin-top: 50px;">
+        </div>
+        <p id="thinkingLabel" class="text-center mt-3">Working...</p>
+      </div>
+
+      <!-- Confirmation Mode -->
+      <div id="confirmationMode" style="display: none;">
+        <div class="mt-3" style="height: 400px; overflow-y: auto;">
+          <div id="confirmationText"></div> <!-- Container for confirmation text -->
+        </div>
+        <div class="mt-3">
+          <div class="btn-group btn-group-justified w-100">
+            <button class="btn btn-success" onclick="applyChanges()"><strong>Apply</strong></button>
+            <button class="btn btn-secondary" onclick="cancel()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center mt-4" style="color: lightgrey; font-size: 0.8em; position: relative; bottom: 0; width: 100%;">
+      <p>Built with &hearts; by Mohsen Hadianfard</p>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html> 

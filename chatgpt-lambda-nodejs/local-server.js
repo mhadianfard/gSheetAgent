@@ -1,4 +1,4 @@
-const app = require('./src/app');
+const app = require('./src/web/app');
 const config = require('./src/config');
 
 const PORT = config.server.port;

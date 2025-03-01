@@ -15,3 +15,6 @@ lambda-layer/
 .idea/ 
 /.DS_Store
 /lambda_function
+
+
+/chatgpt-lambda-nodejs/node_modules

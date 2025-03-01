@@ -1,0 +1,223 @@
+<script>
+    let isListening = false; // Track the listening state
+    let recognition; // Speech recognition object
+
+    // Initialize speech recognition on page load
+    window.onload = function() {
+        initSpeechRecognition();
+    };
+
+    /**
+     * Initializes speech recognition for capturing voice input.
+     */
+    function initSpeechRecognition() {
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true; // Keep recognizing until stopped
+            recognition.interimResults = true; // Show interim results
+
+            recognition.onstart = function() {
+                isListening = true;
+                updateMicrophoneButton(); // Update button state
+            };
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript; // Get the transcript
+                }
+                // Append the new transcript to the existing value in the textarea
+                document.getElementById('instruction').value = transcript; // Append to the textarea value
+            };
+
+            recognition.onend = function() {
+                isListening = false;
+                updateMicrophoneButton(); // Update button state
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                isListening = false;
+                updateMicrophoneButton(); // Update button state
+            };
+        } else {
+            alert('Speech recognition is not supported in this browser.');
+        }
+    }
+
+    /**
+     * Updates the microphone button state based on the listening status.
+     */
+    function updateMicrophoneButton() {
+        const micButton = document.querySelector('.btn-info');
+        if (isListening) {
+            micButton.classList.remove('btn-info');
+            micButton.classList.add('btn-danger'); // Change to red when listening
+            micButton.innerHTML = '<i class="fas fa-microphone-slash"></i>'; // Change icon to indicate stop
+        } else {
+            micButton.classList.remove('btn-danger');
+            micButton.classList.add('btn-info'); // Change back to original color
+            micButton.innerHTML = '<i class="fas fa-microphone"></i>'; // Change icon back to microphone
+        }
+    }
+
+    /**
+     * Starts or stops the speech recognition based on the current state.
+     */
+    function toggleListening() {
+        if (isListening) {
+            recognition.stop();
+        } else {
+            recognition.start();
+        }
+        updateMicrophoneButton();
+    }
+
+    /**
+     * Switches the sidebar to Prompt Mode, hiding the thinking mode and displaying the prompt input.
+     */
+    function enterPromptMode() {
+        document.getElementById('promptMode').style.display = 'block';
+        document.getElementById('thinkingMode').style.display = 'none';        
+        document.getElementById('confirmationMode').style.display = 'none';
+    }
+
+    /**
+     * Shows the thinking mode with a custom label.
+     * @param {string} label - The label to display in the thinking mode.
+     */
+    function enterThinkingMode(label) {
+        document.getElementById('promptMode').style.display = 'none';
+        document.getElementById('thinkingMode').style.display = 'block';
+        document.getElementById('confirmationMode').style.display = 'none';
+        document.getElementById('thinkingLabel').innerText = label;
+    }
+
+    /**
+     * Displays the confirmation text as HTML.
+     * @param {string} htmlString - The HTML string to display in the confirmation area.
+     */
+    function enterConfirmationMode(htmlString) {
+        document.getElementById('promptMode').style.display = 'none';
+        document.getElementById('thinkingMode').style.display = 'none';
+        const confirmationContainer = document.getElementById('confirmationText');
+        confirmationContainer.innerHTML = '<p><strong>Here\'s what I\'ll be doing: </strong></p>' + htmlString;
+        document.getElementById('confirmationMode').style.display = 'block';
+
+        // Enable the Apply button after displaying the confirmation
+        const applyButton = document.querySelector('.btn-success');
+        applyButton.disabled = false;
+    }
+
+    /**
+     * Switches the sidebar to Confirmation Mode, hiding the prompt and showing the confirmation buttons.
+     */
+    function submitPrompt() {
+        // Stop listening if currently in listening mode
+        if (isListening) {
+            recognition.stop(); // Stop recognition
+            updateMicrophoneButton(); // Update button state
+        }
+
+        // Show thinking mode with a custom label
+        const label = "Thinking..."; // You can customize this label as needed
+        enterThinkingMode(label);
+
+        // Get the user input from the textarea
+        const instruction = document.querySelector('textarea').value;
+
+        // Get the OAuth token
+        google.script.run.withSuccessHandler(function(scriptAttributes) {
+            // Send a POST request to the /prompt/text endpoint
+            fetch(`${scriptAttributes.serverUrl}/prompt`, { // Adjust the URL as needed
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${scriptAttributes.oauthToken}`
+                },
+                body: JSON.stringify({ 
+                    instruction: instruction,  
+                    scriptId: scriptAttributes.scriptId, 
+                    timezone: scriptAttributes.timezone 
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);            
+                const receivedInstructions = Array.isArray(data.received_instruction) 
+                    ? '<ul>' + data.received_instruction.map(item => `<li>${item}</li>`).join('') + '</ul>' 
+                    : data.received_instruction;
+                enterConfirmationMode(receivedInstructions); // Display the received instruction
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert('There was an error processing your request: ' + error.message);
+                enterPromptMode();
+            });
+        }).withFailureHandler(scriptRunErrorHandler).getScriptAttributes();
+    }
+    
+
+    /**
+     * Triggers the performAction function in the Google Apps Script.
+     * This function handles success and failure responses from the script.
+     */
+    function applyChanges() {
+        // Show thinking mode with a custom label
+        enterThinkingMode("Applying changes...");
+
+        // Call the Google Apps Script function to apply changes
+        google.script.run
+            .withSuccessHandler(function(response) {
+                enterPromptMode();
+                google.script.run.displayToast('Changes applied successfully!');
+                clearTextarea();
+            })
+            .withFailureHandler(function(error) {
+                scriptRunErrorHandler(error);
+                enterPromptMode();                
+            })
+            .performAction(); // Call the function to perform the action
+    }
+
+    /**
+     * Refreshes the sidebar content by calling the refreshSidebar function in the Google Apps Script.
+     */
+    function refreshSidebar() {
+        google.script.run
+            .withFailureHandler(scriptRunErrorHandler)
+            .refreshSidebar();
+    }
+
+    /**
+     * Clears the textarea content.
+     */
+    function clearTextarea() {
+        document.querySelector('textarea').value = '';
+    }
+
+    /**
+     * Switches the sidebar back to Prompt Mode, hiding the confirmation buttons and showing the prompt.
+     */
+    function cancel() {
+        enterPromptMode();
+    }
+
+    /**
+     * Handles script run errors.
+     * @param {Error} error - The error object.
+     */
+    function scriptRunErrorHandler(error) {
+        console.error(error);
+        if (error.message.includes("PERMISSION_DENIED")) {
+            window.alert("You're likely logged into two Google Accounts at the same time - which is confusing the heck out of Google. Please consider logging out of the other account or using incognito to run this app - until Google fixes their bug!");
+        } else {
+            alert('There was an error processing your request.');
+        }
+    }
+</script>
