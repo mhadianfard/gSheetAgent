@@ -2,8 +2,17 @@ const express = require('express');
 const cors = require('cors');
 const { generateResponse } = require('./services/openai');
 const { getSetupStatus } = require('./services/google-auth');
+const { errorHandler, ValidationError } = require('./middleware/errorHandler');
+const logger = require('./utils/logger');
+const config = require('./config');
 
 const app = express();
+
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.http(`${req.method} ${req.url}`);
+  next();
+});
 
 // Middleware for parsing JSON and handling CORS
 app.use(express.json());
@@ -13,7 +22,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// CORS headers function (similar to your Python implementation)
+// CORS headers function
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -24,37 +33,47 @@ function corsHeaders() {
 }
 
 // Routes
-app.post('/prompt', async (req, res) => {
+app.post('/prompt', async (req, res, next) => {
   try {
     const { prompt, options } = req.body;
     
     if (!prompt) {
-      return res.status(400).json({ error: 'Prompt is required' });
+      throw new ValidationError('Prompt is required');
     }
     
+    logger.info(`Processing prompt: ${prompt.substring(0, 30)}...`);
     const response = await generateResponse(prompt, options);
+    logger.info('Successfully generated response');
     res.json(response);
   } catch (error) {
-    console.error("Error processing prompt:", error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
-app.get('/setup', async (req, res) => {
+app.get('/setup', async (req, res, next) => {
   try {
+    logger.info('Fetching setup status');
     const setupInfo = await getSetupStatus();
     res.json(setupInfo);
   } catch (error) {
-    console.error("Error in setup:", error);
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
+// 404 handler
+app.use((req, res) => {
+  logger.warn(`Route not found: ${req.method} ${req.url}`);
+  res.status(404).json({ error: 'Not Found' });
+});
+
+// Error handling middleware
+app.use(errorHandler);
+
 // For local development
 if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
+  const PORT = config.server.port;
   app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    logger.info(`Server running on port ${PORT}`);
   });
 }
 
