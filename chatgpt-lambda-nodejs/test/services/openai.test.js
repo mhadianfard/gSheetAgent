@@ -21,17 +21,17 @@ describe('OpenAI Service', () => {
     
     // Reset mock data
     jest.clearAllMocks();
-    
-    // Setup default response
+  });
+  
+  test('generates a response from OpenAI', async () => {
+    // Setup successful response for this test
     openaiMock.createChatCompletion.mockResolvedValue({
       data: {
         choices: [{ message: { content: 'Test response' } }],
         usage: { total_tokens: 10 }
       }
     });
-  });
-  
-  test('generates a response from OpenAI', async () => {
+    
     const result = await generateResponse('Test prompt');
     
     // Check that the API was called with correct params
@@ -45,7 +45,7 @@ describe('OpenAI Service', () => {
   });
   
   test('handles API errors gracefully', async () => {
-    // Setup error response
+    // Setup error response for this specific test
     openaiMock.createChatCompletion.mockRejectedValue(
       new Error('API rate limit exceeded')
     );

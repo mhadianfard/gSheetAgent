@@ -1,0 +1,43 @@
+service: chatgpt-lambda-nodejs
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: ca-central-1
+  stage: dev
+  timeout: 29
+  environment:
+    NODE_ENV: ${opt:stage, 'dev'}
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    API_KEY: ${env:API_KEY}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: 'arn:aws:logs:*:*:*'
+
+functions:
+  api:
+    handler: lambda.handler
+    events:
+      - http:
+          path: prompt
+          method: post
+          cors: true
+      - http:
+          path: setup
+          method: get
+          cors: true
+      - http:
+          path: health
+          method: get
+          cors: true
+
+plugins:
+  - serverless-offline 
