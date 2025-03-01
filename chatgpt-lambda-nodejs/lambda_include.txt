@@ -1,5 +1,0 @@
-config
-gas
-src
-lambda.js
-package.json

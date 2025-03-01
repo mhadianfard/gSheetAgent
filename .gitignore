@@ -1,23 +1,71 @@
-# Environment and secrets
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Environment variables and secrets
 .env
+.env.*
+!.env.example
 credentials.json
 token.json
 
-# Python
-__pycache__/
-*.pyc
-.venv/
-/.venv
-lambda-layer/
+# Serverless Framework
+.serverless/
+.serverlessrc
+.build/
 
-# IDE
+# AWS
+.aws/
+aws-config.json
+
+# Logs
+logs/
+*.log
+
+# Build/output directories
+dist/
+build/
+coverage/
+.nyc_output/
+.webpack/
+
+# OS specific files
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Editor directories and files
+.idea/
 .vscode/
-.idea/ 
-/.DS_Store
-/lambda_function
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
 
+# Temp directories
+tmp/
+temp/
+.tmp/
 
-/chatgpt-lambda-nodejs/node_modules
-/chatgpt-lambda-nodejs/credentials.json
-/chatgpt-lambda-nodejs/token.json
-/chatgpt-lambda-nodejs/script_id.txt
+# Local offline cache for serverless-offline
+.offline/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Google OAuth
+oauth2.keys.json
+google-credentials.json
+
+# Jest
+jest-cache/ 

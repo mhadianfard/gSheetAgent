@@ -1,5 +1,5 @@
 config
 gas
 src
-lambda.py
-requirements.txt
+lambda.js
+package.json

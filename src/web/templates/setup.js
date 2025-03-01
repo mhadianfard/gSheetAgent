@@ -4,18 +4,6 @@ document.addEventListener("DOMContentLoaded", function()
 
     if (!failureMessage) {
         google.script.run.refreshSidebar();
-
-        // // Create Success Alert
-        // const successAlert = document.createElement('div');
-        // successAlert.id = 'successAlert';
-        // successAlert.className = 'alert alert-success';
-        // successAlert.style.display = failureMessage ? 'none' : 'block';
-        // successAlert.role = 'alert';
-        // successAlert.innerHTML = `
-        //     <p>The gSheetAgent dynamic script component was installed successfully.</p>
-        //     <p>Please refresh your browser and check the gSheetAgent menu again for the prompt capability.</p>
-        // `;
-        // container.appendChild(successAlert);        
         
     } else {
         // Find the main content container and clear it
