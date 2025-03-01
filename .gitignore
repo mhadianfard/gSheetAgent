@@ -18,3 +18,6 @@ lambda-layer/
 
 
 /chatgpt-lambda-nodejs/node_modules
+/chatgpt-lambda-nodejs/credentials.json
+/chatgpt-lambda-nodejs/token.json
+/chatgpt-lambda-nodejs/script_id.txt

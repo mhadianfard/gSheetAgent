@@ -30,6 +30,7 @@ const config = {
     ],
     credentialsPath: process.env.GOOGLE_CREDENTIALS_PATH || 'credentials.json',
     tokenPath: process.env.GOOGLE_TOKEN_PATH || 'token.json',
+    scriptIdPath: process.env.SCRIPT_ID_PATH || 'script_id.txt',
     gasDynamicDirectory: process.env.GAS_DYNAMIC_DIRECTORY || 'gas/dynamic',
     
     /**
