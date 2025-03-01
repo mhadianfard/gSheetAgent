@@ -2,10 +2,10 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
-const cors = require('cors');
 const LLMClient = require('../llm/llm_client');
 const ScriptManager = require('../google/script_manager');
 const config = require('../config');
+const { corsMiddleware, getCorsHeaders } = require('./middleware/cors-middleware');
 
 /**
  * Extracts the token from the Authorization header.
@@ -20,44 +20,8 @@ const getAuthorizationToken = (req) => {
   return authHeader.split(' ')[1];
 };
 
-/**
- * Get CORS origin checker function based on config
- * @returns {Function} Origin checker function for CORS
- */
-const getOriginFunction = () => {
-  return function(origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, etc)
-    if (!origin) return callback(null, true);
-    
-    const configOrigin = config.cors.origin;
-    
-    // Handle wildcard domains (like *.googleusercontent.com)
-    if (configOrigin.includes('*')) {
-      const pattern = configOrigin.replace('*.', '.*\\.');
-      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-      if (regex.test(origin)) {
-        return callback(null, true);
-      }
-    }
-    
-    // For other origins, check against configured origin
-    if (configOrigin === '*' || origin === configOrigin) {
-      return callback(null, true);
-    }
-    
-    callback(new Error('Not allowed by CORS'));
-  };
-};
-
-// Create a single CORS configuration object
-const corsOptions = {
-  origin: getOriginFunction(),
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-};
-
-// Apply CORS middleware to all routes (including OPTIONS preflight)
-router.use(cors(corsOptions));
+// Apply CORS middleware to all routes
+router.use(corsMiddleware);
 
 /**
  * Handle prompt requests - Receives an instruction and returns AI-generated code
@@ -129,7 +93,7 @@ router.post('/prompt', async (req, res) => {
  */
 router.get('/setup', async (req, res) => {
   // Read the contents of setup.js from the filesystem
-  const jsFilePath = path.join(process.cwd(), 'src', 'services', 'web', 'templates', 'setup.js');
+  const jsFilePath = path.join(process.cwd(), config.templates.setupJsPath);
   
   try {
     let jsContent = await fs.readFile(jsFilePath, 'utf8');
@@ -162,7 +126,7 @@ router.get('/setup', async (req, res) => {
     }
     
     res.set('Content-Type', 'application/javascript');
-    Object.entries(corsHeaders()).forEach(([key, value]) => {
+    Object.entries(getCorsHeaders()).forEach(([key, value]) => {
       res.set(key, value);
     });
     return res.send(jsContent);

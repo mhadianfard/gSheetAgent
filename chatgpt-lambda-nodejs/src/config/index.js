@@ -62,6 +62,11 @@ const config = {
   // CORS Settings
   cors: {
     origin: process.env.CORS_ORIGIN || 'https://*.googleusercontent.com'
+  },
+  
+  // Templates paths
+  templates: {
+    setupJsPath: process.env.SETUP_JS_PATH || 'src/web/templates/setup.js'
   }
 };
 
