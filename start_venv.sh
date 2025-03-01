@@ -8,6 +8,3 @@ else
     # MacOS/Linux
     source .venv/bin/activate
 fi
-
-# Run the main script
-python main.py 

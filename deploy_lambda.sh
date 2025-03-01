@@ -35,7 +35,7 @@ while IFS= read -r file; do
 done < lambda_include.txt
 
 # Install Python dependencies into the lambda_function directory
-pip install -r requirements.txt -t "$TEMP_DIR_NAME/"
+pip3 install --no-cache-dir -r core_requirements.txt -t "$TEMP_DIR_NAME/"
 
 # Create a zip file with the contents of lambda_function in the zip root
 cd "$TEMP_DIR_NAME"
@@ -44,13 +44,10 @@ cd ..
 
 # Upload the zip file to AWS Lambda
 echo "Uploading lambda function..."
-if ! aws lambda update-function-code \
+aws lambda update-function-code \
     --function-name $AWS_FUNCTION_NAME \
     --zip-file "fileb://$ZIP_FILE" \
-    --region "$AWS_REGION"; then
-    echo "Error: Failed to upload the lambda function. Please check your AWS credentials and permissions."
-    exit 1
-fi
+    --region "$AWS_REGION"
 
 # Clean up: delete the zip file and the lambda_function directory
 rm -f "$ZIP_FILE"
