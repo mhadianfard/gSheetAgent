@@ -34,8 +34,10 @@ while IFS= read -r file; do
     cp -r "$file" "$TEMP_DIR_NAME/"
 done < lambda_include.txt
 
-# Install Python dependencies into the lambda_function directory
-pip3 install --no-cache-dir -r core_requirements.txt -t "$TEMP_DIR_NAME/"
+# Install Node.js dependencies into the lambda_function directory
+cd "$TEMP_DIR_NAME"
+npm install --production
+cd ..
 
 # Create a zip file with the contents of lambda_function in the zip root
 cd "$TEMP_DIR_NAME"
@@ -54,4 +56,3 @@ rm -f "$ZIP_FILE"
 rm -rf "$TEMP_DIR_NAME"
 
 echo "Deployed to $AWS_LAMBDA_URL"
-
