@@ -53,5 +53,4 @@ oauth2.keys.json
 google-credentials.json
 
 # Jest
-jest-cache/ 
-/node_modules
+jest-cache/
