@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for gSheetAgent Lambda application'
+
+Parameters:
+  ServiceName:
+    Type: String
+    Default: gsheetagent
+    Description: Name of the Lambda service
+  
+  EnvironmentType:
+    Type: String
+    Default: Production
+    AllowedValues:
+      - Development
+      - Staging
+      - Production
+    Description: Environment type for the Lambda function
+
+Resources:
+  # IAM Role for Lambda execution with expanded permissions
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaCustomPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'logs:CreateLogGroup'
+                  - 'logs:CreateLogStream'
+                  - 'logs:PutLogEvents'
+                Resource: '*'
+      RoleName: !Sub "${ServiceName}-lambda-role-${EnvironmentType}"
+  
+  # Lambda Function
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${ServiceName}-${EnvironmentType}"
+      Handler: lambda.handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Sub "${ServiceName}-deployments-${AWS::Region}"
+        S3Key: lambda-package.zip
+      Runtime: nodejs18.x
+      Timeout: 30
+      MemorySize: 256
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref EnvironmentType
+          APP_AWS_REGION: !Ref AWS::Region
+          APP_FUNCTION_NAME: !Ref AWS::StackName
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentType
+        - Key: Service
+          Value: !Ref ServiceName
+  
+  # CloudWatch Log Group
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LambdaFunction}"
+      RetentionInDays: 14
+
+Outputs:
+  LambdaFunction:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt LambdaFunction.Arn
+  
+  LambdaFunctionName:
+    Description: "Lambda Function Name"
+    Value: !Ref LambdaFunction
+  
+  LambdaRoleARN:
+    Description: "IAM Role ARN"
+    Value: !GetAtt LambdaExecutionRole.Arn 

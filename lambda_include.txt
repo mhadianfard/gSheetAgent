@@ -1,5 +1,5 @@
-config
 gas
 src
 lambda.js
 package.json
+package-lock.json

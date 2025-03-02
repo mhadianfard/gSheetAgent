@@ -1,17 +1,22 @@
+'use strict';
+
+// Import dependencies
 const serverless = require('serverless-http');
-const app = require('./src/app');
+const app = require('./src/web/app');
 const config = require('./src/config');
 
-// Log configuration on cold start (excluding sensitive information)
-console.log('Starting Lambda with configuration:');
-console.log('AWS Region:', config.aws.region);
-console.log('OpenAI Model:', config.openai.defaultModel);
+// Set AWS Lambda-specific environment variables
+process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || 'local';
+process.env.AWS_REGION = process.env.AWS_REGION || 'local';
 
-// Create a serverless handler from the Express app
+// Configure serverless handler
 const handler = serverless(app);
 
-// Lambda handler function
-exports.handler = async (event, context) => {
-  // Process the Lambda event with our Express app
-  return await handler(event, context);
+// Export the handler function
+module.exports.handler = async (event, context) => {
+  console.log('AWS Region:', config.aws.region);
+  
+  // Handle API Gateway events
+  const result = await handler(event, context);
+  return result;
 };
