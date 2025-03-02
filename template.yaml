@@ -53,7 +53,7 @@ Resources:
       Code:
         S3Bucket: !Sub "${ServiceName}-deployments-${AWS::Region}"
         S3Key: lambda-package.zip
-      Runtime: nodejs18.x
+      Runtime: nodejs22.x
       Timeout: 30
       MemorySize: 256
       Environment:

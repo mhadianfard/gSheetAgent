@@ -54,3 +54,4 @@ google-credentials.json
 
 # Jest
 jest-cache/ 
+/node_modules

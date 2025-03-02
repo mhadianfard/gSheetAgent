@@ -27,7 +27,6 @@ async function main() {
     // Paths for token and credentials
     const tokenPath = path.join(process.cwd(), config.google.tokenPath);
     const credentialsPath = path.join(process.cwd(), config.google.credentialsPath);
-    const scriptIdPath = path.join(process.cwd(), config.google.scriptIdPath);
     
     // Obtain Google Authorization token
     let credentials;
@@ -64,15 +63,17 @@ async function main() {
       console.log('New token saved');
     }
 
-    // Load the script ID from the file system
-    let scriptId;
-    try {
-      scriptId = (await fs.readFile(scriptIdPath, 'utf8')).trim();
-      console.log(`Using script ID: ${scriptId}`);
-    } catch (error) {
-      console.error(`Error loading script ID: ${error}`);
+    // Get script ID from environment variables
+    const scriptId = config.google.scriptId;
+    
+    // Ensure script ID is available
+    if (!scriptId) {
+      console.error('Error: No Script ID found in environment variables.');
+      console.error('Please set SCRIPT_ID in your .env file.');
       return;
     }
+    
+    console.log(`Using script ID: ${scriptId}`);
 
     // Initialize the ScriptManager with the token
     console.log('Token object:', token);
