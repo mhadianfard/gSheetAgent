@@ -31,5 +31,22 @@
   },
   "devDependencies": {
     "nodemon": "^2.0.22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mhadianfard/gSheetAgent"
+  },
+  "author": {
+    "name": "Mohsen Hadianfard",
+    "email": "mohsen@moseytech.ca",
+    "url": "https://linkedin.com/in/mhadianfard"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/mhadianfard/gSheetAgent#readme",
+  "bugs": {
+    "url": "https://github.com/mhadianfard/gSheetAgent/issues"
+  },
+  "organization": {
+    "name": "MoseyTech Consulting Inc."
   }
 }

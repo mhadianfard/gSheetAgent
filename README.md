@@ -1,12 +1,38 @@
 # gSheetAgent
 An experimental agentic AI assistant for Google Sheets.
 
+## Table of Contents
+- [How it works](#how-it-works)
+- [Known Limitations](#known-limitations)
+- [Privacy Policy](#privacy-policy)
+- [How to set up for use](#how-to-set-up-for-use)
+- [How to set up for development](#how-to-set-up-for-development)
+  - [Prerequisites](#prerequisites)
+  - [Getting Started](#getting-started)
+  - [Running the Application](#running-the-application)
+  - [Deployment](#deployment-optional)
+  - [Directory Structure](#directory-structure)
+  - [Additional Resources](#additional-resources)
+- [License](#license)
+- [Contact](#contact)
+
 ## How it works
 gSheetAgent enables users to describe their desired actions in the spreadsheet, and it utilizes an LLM model to generate the corresponding [Google App Script](https://developers.google.com/apps-script) code. The agent also provides a detailed explanation of the generated code, which users can execute with a click. The code is automatically uploaded to the associated Script project for execution after user review.
 
+## Known Limitations
+Below are things the developer is aware of and may address in future releases, especially if there's demand for them:
+
+- The code generation and explanation logic provided by the LLM is very basic with no memory of past actions, no handling of edge cases, no guardrails and low quality in it's explanations.
+- The agent only works with OpenAI models at the moment.
+- The microphone feature is very basic and doesn't handle pauses in speech very well.
+
+## Privacy Policy
+- gSheetAgent does not have a database, it does not store your prompts or the response to them, and does not read or store any information from your spreadsheet or other Google documents. 
+- This application currently uses OpenAI's LLM APIs to send your prompts and receive responses. For policies on how OpenAI uses your data, please refer to their [privacy policy](https://openai.com/api/policies/privacy-policy/).
+- gSheetAgent uses Mixpanel to track usage information for the purposes of understanding how the app is used, how it can be improved and for support and troubleshooting purposes. Included in the data we collect is the **email address** of the Google account who is using the app. We also collect the **Spreadsheet document ID** for the purposes of associating the usage with the correct user and document. We will never subscribe your email address to any mailing list without your consent and it will not be shared with any third parties. For more information on how Mixpanel uses your data, please refer to their [privacy policy](https://mixpanel.com/privacy/).
 
 ## How to set up for use
-gSheetAgent needs to generate dynamic code and make it available for the user to run. For this reason, it requires some elevated privileges in Google Cloud Platform which requires some manual configuration. For this reason, it's not possible to publish this app as an official add-on to Google Sheets.
+gSheetAgent needs to create dynamic code for users to run, which means it requires some sensitive permissions in Google Cloud Platform and a bit of manual configuration. Because of this, it can't be published as an official add-on for Google Sheets.
 
 >[!WARNING]
 > This is an experimental project. You should use with caution. The generated code can always be reviewed by you before execution. The developer of this project is not responsible for any issues that may occur as a result of using it.
@@ -125,7 +151,6 @@ gSheetAgent needs a dedicated Apps Script project. If your spreadsheet already h
 Copy the code from the `gas/starter/appscript.json` in this repo, and paste it into `appsscript.json` in the Apps Script editor.
 https://github.com/mhadianfard/gSheetAgent/blob/56e075d86923f0c795b3b40d97afc9a0fb7e9071/gas/starter/appsscript.json#L1-L10
 <kbd><img src="docs/paste-start-manifest.png" alt="Paste starter appsscript.json" height="200"/></kbd>
-<br/>
 
 Go to the `Editor` section from the left panel, and select `Code.gs` from the file list.
 Copy the code from the `gas/starter/index.js` in this repo, and paste it into `Code.gs` in the Apps Script editor.
@@ -144,3 +169,205 @@ The prompt will warn you that this is an unverified app. Once again, this is bec
 <br/><br/><kbd><img src="docs/oauth-grant.png" alt="Authorize permissions" height="200"/></kbd>
 
 You should now have full access to gSheetAgent!
+
+<br/>
+<br/>
+
+## How to set up for development
+
+This guide will help you set up a local development environment for the gSheetAgent project
+
+### Prerequisites
+
+- Node.js 22.0.0 or higher
+- Git
+- An OpenAI API key
+- A Google Cloud Platform account
+
+### Getting Started
+
+#### 1. Clone the Repository
+
+```sh
+git clone https://github.com/mhadianfard/gSheetAgent.git
+cd gSheetAgent
+```
+
+#### 2. Install Dependencies
+
+```sh
+npm install
+```
+
+#### 3. Set Up Environment Variables
+
+Create a `.env` file in the root directory and configure the following variables:
+
+##### OpenAI Configuration
+
+```
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o  # or another model
+```
+
+##### Google Configuration
+
+```
+GOOGLE_CREDENTIALS_PATH=credentials.json
+GOOGLE_TOKEN_PATH=token.json
+SCRIPT_ID=your_google_script_id
+GAS_DYNAMIC_DIRECTORY=gas/dynamic
+```
+
+##### Server Configuration
+
+```
+PORT=5000
+```
+
+##### AWS Configuration (for deployment)
+
+```
+AWS_REGION=us-central-1
+AWS_PROFILE=serverless-deploy
+```
+
+#### 4. Set Up Google Cloud Project
+
+>[!TIP]
+> Follow the steps in the [How to set up for use](#how-to-set-up-for-use) section for more details on how to set up a Google Cloud Platform project and enable the necessary APIs.
+
+1. Create a new project on [Google Cloud Console](https://console.cloud.google.com/)
+2. Enable the Google Apps Script API
+3. Configure OAuth consent screen:
+   - Select "External" user type
+   - Add scopes for Google Apps Script and Google Sheets
+   - Add test users (your Google email)
+4. Create OAuth credentials:
+   - Application type: Web application
+   - Add authorized redirect URI: `http://localhost:3000/`
+   - Download the credentials JSON file and save it as `credentials.json` in the project root. This is only needed if you intend to run `upload-gas.js` (more later).
+
+#### 5. Get Google Authentication Token (optional)
+
+If you want to run `upload-gas.js` to upload the generated code to your Google Apps Script project, you'll need to get an authentication token. Run the authentication helper script:
+
+```sh
+node upload-gas.js
+```
+
+This will:
+
+1. Open a browser window for authentication
+2. Ask you to select your Google account
+3. Ask for consent to access Google APIs
+4. Save the authentication token to `token.json`
+
+#### 6. Setup Google Apps Script
+
+1. Create a new Google Sheet
+2. Create a new Apps Script project (Extensions > Apps Script)
+3. You have two options here:
+  - **Option A.** You can follow the steps in the [How to set up for use](#how-to-set-up-for-use) and use the starter code to proceed.
+  - **Option B.** You can use the `upload-gas.js` script to upload the main Google Apps Script code to your project. To do this, note the Script ID from the URL: `https://script.google.com/home/projects/SCRIPT_ID/edit` and add it to your `.env` file as `SCRIPT_ID`.
+
+### Running the Application
+
+#### Uploading Google Apps Script Code
+You can deploy the main Google Apps Script code to your Google Apps Script project, using the `upload-gas.js` script shown below. 
+> [!NOTE]
+> You would need to have a valid authentication token in `token.json` as described in Step 5, for this to work. Also you would have had to specify a `SCRIPT_ID` in your `.env` file as per Step 6.
+
+```sh
+node upload-gas.js
+```
+Once code is uploaded into your Google Apps Script project, go to your spreadsheet, refresh the browser window and you should see the new `gSheetAgent` menu item. Select `Open` or `Setup` to begin. Running the script will create a script property that allows you to customize the server URL. You can point this to any remote server you spin up, or a local server as described below.  
+
+<kbd><img src="docs/script-server-settings.png" alt="Script Server Settings" height="300"/></kbd>
+
+
+#### Start the Local Server
+
+```sh
+node local-server.js
+```
+
+The server will start on `http://localhost:5000` with the following endpoints:
+
+- `POST /prompt` - For handling LLM code generation requests
+- `GET /setup` - For initializing the Google Apps Script setup
+
+### Deployment (Optional)
+
+#### Deploy to AWS Lambda
+
+1. Configure AWS CLI credentials:
+
+```sh
+aws configure --profile serverless-deploy
+```
+
+2. Run the deployment script:
+> [!NOTE]
+> The deployment script has ample documentation written inside it. Read for more details.
+```sh
+node aws/deploy.js
+```
+
+3. Set up a custom domain (optional):
+> [!NOTE]
+> The domain setup script has ample documentation written inside it. Read for more details.
+```sh
+node aws/setup-custom-domain.js <lambda-url> <certificate-arn> <hosted-zone-id>
+```
+
+### Directory Structure
+
+```
+/ src/              - Core backend application code
+  / config/         - Configuration management
+  / google/         - Google API integration
+  / web/            - Express server routes and middleware
+/ gas/              - Google Apps Script code, acting as client
+  / dynamic/        - Dynamic scripts to be uploaded to Google Apps Script
+  / starter/        - Starter templates for Apps Script
+/ aws/              - AWS deployment scripts
+  / deploy.js       - AWS Lambda deployment script
+  / setup-custom-domain.js - Custom domain setup script
+/ lambda.js         - AWS Lambda entry point
+/ local-server.js   - Local development server
+```
+
+### Additional Resources
+
+- [OpenAI API Documentation](https://platform.openai.com/docs/)
+- [Google Apps Script Documentation](https://developers.google.com/apps-script)
+- [AWS Lambda Documentation](https://docs.aws.amazon.com/lambda/)
+
+## License
+
+Copyright (c) 2025 MoseyTech Consulting Inc.
+
+This project is available as open source under the terms of the MIT License, with the following additional provisions:
+
+1. The core functionality of this software is freely available for use, modification, and distribution according to the MIT License terms.
+
+2. MoseyTech Consulting Inc. reserves exclusive rights to privately extend, develop, and commercially deploy any enhancements to the language model (LLM) integration and code generation capabilities of this software.
+
+3. Contributions to this project are welcome and will be subject to the same license terms upon acceptance.
+
+4. Any use of the MoseyTech name, logo, or other branding elements requires prior written permission.
+
+For commercial use or licensing inquiries beyond the scope of this license, please contact MoseyTech Consulting Inc.
+
+The full MIT License text can be found in the [LICENSE](./LICENSE) file in this repository.
+
+
+## Contact
+
+For questions, support, or inquiries about this project, please contact:
+
+- **Developer:** [Mohsen Hadianfard](https://linkedin.com/in/mhadianfard)
+- **Email:** mohsen@moseytech.ca
+- **Organization:** MoseyTech Consulting Inc.
+
