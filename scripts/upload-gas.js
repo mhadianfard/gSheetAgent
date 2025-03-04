@@ -12,8 +12,8 @@ const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
 const express = require('express');
 const opener = require('opener');
-const ScriptManager = require('./src/google/script-manager');
-const config = require('./src/config');
+const ScriptManager = require('../src/google/script-manager');
+const config = require('../src/config');
 
 /**
  * Main function to update Google Apps Script content.

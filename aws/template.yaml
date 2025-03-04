@@ -48,19 +48,21 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       FunctionName: !Sub "${ServiceName}-${EnvironmentType}"
-      Handler: lambda.handler
       Role: !GetAtt LambdaExecutionRole.Arn
+      Handler: server/lambda.handler
       Code:
         S3Bucket: !Sub "${ServiceName}-deployments-${AWS::Region}"
         S3Key: lambda-package.zip
       Runtime: nodejs22.x
       Timeout: 30
-      MemorySize: 256
+      MemorySize: 512
       Environment:
         Variables:
           ENVIRONMENT: !Ref EnvironmentType
           APP_AWS_REGION: !Ref AWS::Region
           APP_FUNCTION_NAME: !Ref AWS::StackName
+          NODE_ENV: !Ref EnvironmentType
+          AWS_LAMBDA_FUNCTION_NAME: !Sub "${ServiceName}-${EnvironmentType}"
       Tags:
         - Key: Environment
           Value: !Ref EnvironmentType

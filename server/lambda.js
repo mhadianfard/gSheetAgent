@@ -2,8 +2,8 @@
 
 // Import dependencies
 const serverless = require('serverless-http');
-const app = require('./src/web/app');
-const config = require('./src/config');
+const app = require('../src/web/app');
+const config = require('../src/config');
 
 // Set AWS Lambda-specific environment variables
 process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || 'local';

@@ -278,8 +278,10 @@ Once code is uploaded into your Google Apps Script project, go to your spreadshe
 
 #### Start the Local Server
 
+Run the local server to handle API requests from the Google Apps Script:
+
 ```sh
-node local-server.js
+node server/local.js
 ```
 
 The server will start on `http://localhost:5000` with the following endpoints:
@@ -314,17 +316,33 @@ node aws/setup-custom-domain.js <lambda-url> <certificate-arn> <hosted-zone-id>
 ### Directory Structure
 
 ```
-/ src/              - Core backend application code
-  / config/         - Configuration management
-  / google/         - Google API integration
-  / web/            - Express server routes and middleware
-/ gas/              - Google Apps Script code, acting as client
-  / sidebar/        - Sidebar HTML and JavaScript resources
-/ aws/              - AWS deployment scripts
-  / deploy.js       - AWS Lambda deployment script
-  / setup-custom-domain.js - Custom domain setup script
-/ lambda.js         - AWS Lambda entry point
-/ local-server.js   - Local development server
+/                       - Project root
+├── src/                - Core backend application code
+│   ├── config/         - Configuration management
+│   ├── google/         - Google API integration
+│   ├── web/            - Express server app, routes and middleware
+│   │   ├── routes.js
+│   │   ├── app.js
+│   │   └── middleware/
+│   └── llm/            - LLM integration
+├── gas/                - Google Apps Script code, acting as client
+│   ├── appsscript.json - Google Apps Script manifest file
+│   ├── start.js        - Main GAS entry point
+│   └── sidebar/        - Sidebar HTML and JavaScript resources
+├── server/             - Server implementation files
+│   ├── lambda.js       - AWS Lambda entry point
+│   └── local.js        - Local development server
+├── aws/                - AWS deployment scripts
+│   ├── deploy.js       - AWS Lambda deployment script
+│   ├── template.yaml   - CloudFormation template
+│   ├── lambda-include.txt - Files to include in Lambda package
+│   └── domain-setup.js - Custom domain setup script
+├── scripts/            - Utility scripts
+│   └── upload-gas.js   - Script for uploading GAS code
+├── docs/               - Documentation files and images
+├── .env                - Environment variables
+├── package.json        - Node.js dependencies
+└── README.md           - Project documentation
 ```
 
 ### Additional Resources

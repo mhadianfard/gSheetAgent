@@ -11,6 +11,8 @@
  * - Packages Lambda code based on files listed in lambda_include.txt
  * - Uploads the package to S3
  * - Creates/updates CloudFormation stack
+ * - Automatically transfers selected environment variables from .env to Lambda (initial deployment only)
+ * - Supports Lambda handler located in the server/lambda.js file
  * - Handles cleaning up failed stacks
  * - Sets up Lambda function URL for public access
  * - Supports production dependencies only in the deployment package
@@ -23,6 +25,14 @@
  *   --verbose        Display detailed output during deployment
  *   --help           Show this help information
  * 
+ * Environment Variables:
+ *   The following variables from .env are automatically copied to the Lambda environment
+ *   on initial deployment:
+ *   - OPENAI_API_KEY - Your OpenAI API key
+ *   - OPENAI_MODEL - The OpenAI model to use
+ *   - LLM_MODEL - Alternative LLM model configuration
+ *   - GAS_DIRECTORY - Google Apps Script directory path
+ *
  * Requirements:
  *   - AWS CLI credentials configured
  *   - Node.js 16+
@@ -35,7 +45,7 @@ const { CloudFormationClient, DescribeStacksCommand, CreateStackCommand, UpdateS
         DeleteStackCommand, ListStackResourcesCommand } = require('@aws-sdk/client-cloudformation');
 const { LambdaClient, UpdateFunctionCodeCommand, GetFunctionCommand, 
         CreateFunctionUrlConfigCommand, GetFunctionUrlConfigCommand,
-        AddPermissionCommand } = require('@aws-sdk/client-lambda');
+        AddPermissionCommand, UpdateFunctionConfigurationCommand } = require('@aws-sdk/client-lambda');
 const { IAMClient, GetRoleCommand, ListAttachedRolePoliciesCommand, 
         DetachRolePolicyCommand, ListRolePoliciesCommand, 
         DeleteRolePolicyCommand } = require('@aws-sdk/client-iam');
@@ -66,8 +76,8 @@ const config = {
   region: process.env.AWS_REGION || "ca-central-1",
   environment: "Production",
   codeDir: ".",
-  templateFile: "template.yaml",
-  includeFile: "lambda-include.txt",
+  templateFile: path.join(__dirname, "template.yaml"),
+  includeFile: path.join(__dirname, "lambda-include.txt"),
   profile: process.env.AWS_PROFILE || "serverless-deploy"
 };
 
@@ -301,7 +311,7 @@ async function packageLambdaCode() {
 
   // Read include file
   logStatus("Copying application files...");
-  const includeFilePath = path.join(process.cwd(), config.includeFile);
+  const includeFilePath = config.includeFile;
   const includeContent = await readFile(includeFilePath, 'utf8');
   const includes = includeContent.split('\n')
     .map(line => line.trim())
@@ -454,7 +464,10 @@ async function createNewStack() {
   
   const templateBody = await readFile(path.join(process.cwd(), config.templateFile), 'utf8');
   
-  console.log(`${colors.yellow}Deploying stack (this may take several minutes)...${colors.reset}`);
+  // Read environment variables from .env file for initial deployment
+  const envVars = await readEnvFile();
+  
+  console.log(`${colors.yellow}Deploying stack with environment variables (this may take several minutes)...${colors.reset}`);
   
   await runCommand(() => cfClient.send(new CreateStackCommand({
     StackName: config.stackName,
@@ -485,7 +498,93 @@ async function createNewStack() {
     throw new Error(`Stack creation failed: ${stackStatus}`);
   }
   
+  // Get Lambda function name from stack outputs after creation
+  const outputs = await getStackOutputs();
+  const functionName = outputs.find(o => o.OutputKey === 'LambdaFunctionName')?.OutputValue;
+  
+  if (functionName && Object.keys(envVars).length > 0) {
+    // Update Lambda environment variables after stack creation
+    logStatus("Setting Lambda environment variables from .env file...");
+    await updateLambdaEnvironment(functionName, envVars);
+  }
+  
   logStatus("Stack creation completed successfully");
+}
+
+/**
+ * Reads the .env file and returns environment variables as an object
+ * @returns {Promise<Object>} Environment variables
+ */
+async function readEnvFile() {
+  try {
+    const envPath = path.join(process.cwd(), '.env');
+    const envContent = await readFile(envPath, 'utf8');
+    
+    // Parse .env file
+    const envVars = {};
+    const lines = envContent.split('\n');
+    
+    // List of variables we want to include
+    const includedVars = [
+      'OPENAI_API_KEY',
+      'OPENAI_MODEL',
+      'LLM_MODEL',
+      'GAS_DIRECTORY',
+      // Add other variables you want to include
+    ];
+    
+    for (const line of lines) {
+      // Skip empty lines and comments
+      if (!line || line.trim().startsWith('#')) continue;
+      
+      const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
+      if (match) {
+        const key = match[1];
+        // Only include specific variables to avoid transferring unnecessary config
+        if (includedVars.includes(key)) {
+          let value = match[2] || '';
+          // Remove quotes if present
+          value = value.replace(/^['"]|['"]$/g, '');
+          envVars[key] = value;
+        }
+      }
+    }
+    
+    return envVars;
+  } catch (error) {
+    console.warn(`${colors.yellow}Warning: Could not read .env file: ${error.message}${colors.reset}`);
+    return {};
+  }
+}
+
+/**
+ * Updates Lambda environment variables
+ * @param {string} functionName - Lambda function name
+ * @param {Object} envVars - Environment variables to set
+ */
+async function updateLambdaEnvironment(functionName, envVars) {
+  try {
+    // Get current Lambda configuration
+    const lambdaConfig = await runCommand(() => lambdaClient.send(new GetFunctionCommand({
+      FunctionName: functionName
+    })));
+    
+    // Merge existing environment variables with new ones
+    const currentVars = lambdaConfig.Configuration.Environment?.Variables || {};
+    const updatedVars = { ...currentVars, ...envVars };
+    
+    // Update Lambda configuration with new environment variables
+    await runCommand(() => lambdaClient.send(new UpdateFunctionConfigurationCommand({
+      FunctionName: functionName,
+      Environment: {
+        Variables: updatedVars
+      }
+    })));
+    
+    logStatus("Lambda environment variables updated successfully");
+  } catch (error) {
+    console.error(`${colors.red}Error updating Lambda environment variables: ${error.message}${colors.reset}`);
+  }
 }
 
 /**
