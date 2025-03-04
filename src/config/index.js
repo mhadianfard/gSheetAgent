@@ -23,41 +23,16 @@ const config = {
   
   // Google Configuration
   google: {
-    scopes: [
-      'https://www.googleapis.com/auth/script.container.ui',
-      'https://www.googleapis.com/auth/script.projects',
-      'https://www.googleapis.com/auth/spreadsheets.currentonly',
-    ],
     credentialsPath: process.env.GOOGLE_CREDENTIALS_PATH || 'credentials.json',
     tokenPath: process.env.GOOGLE_TOKEN_PATH || 'token.json',
     scriptId: process.env.SCRIPT_ID,
-    gasDynamicDirectory: process.env.GAS_DYNAMIC_DIRECTORY || 'gas/dynamic',
-    
-    /**
-     * Generates the JavaScript code for the performAction function with the current timestamp.
-     *
-     * @returns {string} The JavaScript code to upload.
-     */
-    getDefaultDynamicScript: function() {
-      const currentTime = new Date().toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      }).toLowerCase();
-      
-      return `
-      function performAction() {
-          const ui = SpreadsheetApp.getUi();
-          ui.alert('This script was last generated at ${currentTime}');
-      }
-      `;
-    }
+    gasDirectory: process.env.GAS_DIRECTORY || 'gas',
   },
   
   // LLM Configuration
   llm: {
     model: process.env.LLM_MODEL || 'gpt-4o',
-    instructionFile: process.env.LLM_INSTRUCTION_FILE || 'src/llm/llm_instruction.txt'
+    instructionFile: process.env.LLM_INSTRUCTION_FILE || 'src/llm/llm-instruction.txt'
   },
   
   // CORS Settings

@@ -67,7 +67,7 @@ const config = {
   environment: "Production",
   codeDir: ".",
   templateFile: "template.yaml",
-  includeFile: "lambda_include.txt",
+  includeFile: "lambda-include.txt",
   profile: process.env.AWS_PROFILE || "serverless-deploy"
 };
 

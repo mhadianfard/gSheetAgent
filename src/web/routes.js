@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 const path = require('path');
-const LLMClient = require('../llm/llm_client');
-const ScriptManager = require('../google/script_manager');
+const LLMClient = require('../llm/llm-client');
+const ScriptManager = require('../google/script-manager');
 const config = require('../config');
 const { corsMiddleware, getCorsHeaders } = require('./middleware/cors-middleware');
 

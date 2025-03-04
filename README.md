@@ -148,13 +148,13 @@ gSheetAgent needs a dedicated Apps Script project. If your spreadsheet already h
 <br/><br/><kbd><img src="docs/create-new-script.png" alt="Create new script" height="100"/></kbd><br/><br/>
 </details>
 
-Copy the code from the `gas/starter/appscript.json` in this repo, and paste it into `appsscript.json` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/56e075d86923f0c795b3b40d97afc9a0fb7e9071/gas/starter/appsscript.json#L1-L10
+Copy the code from the `gas/appsscript.json` in this repo, and paste it into `appsscript.json` in the Apps Script editor.
+https://github.com/mhadianfard/gSheetAgent/blob/56e075d86923f0c795b3b40d97afc9a0fb7e9071/gas/appsscript.json#L1-L10
 <kbd><img src="docs/paste-start-manifest.png" alt="Paste starter appsscript.json" height="200"/></kbd>
 
 Go to the `Editor` section from the left panel, and select `Code.gs` from the file list.
-Copy the code from the `gas/starter/index.js` in this repo, and paste it into `Code.gs` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/56e075d86923f0c795b3b40d97afc9a0fb7e9071/gas/starter/index.js#L1-L69
+Copy the code from the `gas/start.js` in this repo, and paste it into `Code.gs` in the Apps Script editor.
+https://github.com/mhadianfard/gSheetAgent/blob/56e075d86923f0c795b3b40d97afc9a0fb7e9071/gas/start.js#L1-L69
 <kbd><img src="docs/paste-starter-code.png" alt="Paste Starter Code" height="200"/></kbd>
 
 
@@ -203,32 +203,22 @@ npm install
 
 Create a `.env` file in the root directory and configure the following variables:
 
-##### OpenAI Configuration
-
-```
+```env
+# OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key
 OPENAI_MODEL=gpt-4o  # or another model
-```
 
-##### Google Configuration
-
-```
+# Google Configuration
 GOOGLE_CREDENTIALS_PATH=credentials.json
 GOOGLE_TOKEN_PATH=token.json
 SCRIPT_ID=your_google_script_id
-GAS_DYNAMIC_DIRECTORY=gas/dynamic
-```
+GAS_DIRECTORY=gas
 
-##### Server Configuration
-
-```
+# Server Configuration
 PORT=5000
-```
 
-##### AWS Configuration (for deployment)
-
-```
-AWS_REGION=us-central-1
+# AWS Configuration (for deployment)
+AWS_REGION=ca-central-1
 AWS_PROFILE=serverless-deploy
 ```
 
@@ -245,7 +235,7 @@ AWS_PROFILE=serverless-deploy
    - Add test users (your Google email)
 4. Create OAuth credentials:
    - Application type: Web application
-   - Add authorized redirect URI: `http://localhost:3000/`
+   - Add authorized redirect URI: `http://localhost:5000/` (uses the PORT from your config)
    - Download the credentials JSON file and save it as `credentials.json` in the project root. This is only needed if you intend to run `upload-gas.js` (more later).
 
 #### 5. Get Google Authentication Token (optional)
@@ -281,7 +271,7 @@ You can deploy the main Google Apps Script code to your Google Apps Script proje
 ```sh
 node upload-gas.js
 ```
-Once code is uploaded into your Google Apps Script project, go to your spreadsheet, refresh the browser window and you should see the new `gSheetAgent` menu item. Select `Open` or `Setup` to begin. Running the script will create a script property that allows you to customize the server URL. You can point this to any remote server you spin up, or a local server as described below.  
+Once code is uploaded into your Google Apps Script project, go to your spreadsheet, refresh the browser window and you should see the new `gSheetAgent` menu item. Select `Setup` to begin. This will initialize the add-on and set up necessary properties. After setup is complete, you'll be able to use the `Open Sidebar` option to access the agent.
 
 <kbd><img src="docs/script-server-settings.png" alt="Script Server Settings" height="300"/></kbd>
 
@@ -329,8 +319,7 @@ node aws/setup-custom-domain.js <lambda-url> <certificate-arn> <hosted-zone-id>
   / google/         - Google API integration
   / web/            - Express server routes and middleware
 / gas/              - Google Apps Script code, acting as client
-  / dynamic/        - Dynamic scripts to be uploaded to Google Apps Script
-  / starter/        - Starter templates for Apps Script
+  / sidebar/        - Sidebar HTML and JavaScript resources
 / aws/              - AWS deployment scripts
   / deploy.js       - AWS Lambda deployment script
   / setup-custom-domain.js - Custom domain setup script

@@ -1,9 +1,16 @@
+/**
+ * The /setup endpoint on the server will first attempt to update the remote script with new contents, 
+ * then it will respond with contents of this script file as an application/javascript response.
+ * 
+ * In case the script update fails, the server will put a failure message here before responding to the caller.
+ * 
+ */
 document.addEventListener("DOMContentLoaded", function() 
 {
-    const failureMessage = '';
+    const failureMessage = ''; // This will be set by the server if the script update fails.
 
     if (!failureMessage) {
-        google.script.run.refreshSidebar();
+        google.script.run.finishSetup();
         
     } else {
         // Find the main content container and clear it

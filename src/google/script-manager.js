@@ -5,14 +5,57 @@ const { OAuth2Client } = require('google-auth-library');
 const config = require('../config');
 
 class ScriptManager {
+  
+  /**
+   * Generates the JavaScript code for the performAction function with the current timestamp.
+   *
+   * @returns {string} The JavaScript code to upload.
+   */
+  static getDefaultGeneratedCode() {
+      const currentTime = new Date().toLocaleString('en-US', { 
+        month: 'long', 
+        day: 'numeric', 
+        year: 'numeric', 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      }).replace(',', ' at').toLowerCase();
+      
+      return `
+        function performAction() {
+            const ui = SpreadsheetApp.getUi();
+            ui.alert('This script was last generated at ${currentTime}');
+        }
+      `;
+  }
+
+  /**
+   * Reads the Google Apps Script manifest file (appsscript.json) from the specified GAS directory.
+   *
+   * @param {string} gasDirectory - The directory to read the manifest file from.
+   * @returns {Promise<Object>} The parsed JSON object from the manifest file.
+   * @throws {Error} Throws an error if the manifest file cannot be read or parsed.
+   * 
+   * @static
+   */
+  static async readGasManifest(gasDirectory) {
+    const manifestPath = path.join(gasDirectory, 'appsscript.json');
+    try {
+        const data = await fs.readFile(manifestPath, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error("Error reading GAS manifest file:", error);
+        throw new Error("Failed to read GAS manifest file.");
+    }
+  }
+
   /**
    * A class to handle uploading and updating Google Apps Script projects.
    * 
    * @param {string} token - The OAuth token to authenticate the user.
    */
-  constructor(token = null) {
-    this.SCOPES = config.google.scopes;    
-    this.GAS_DYNAMIC_DIRECTORY = path.join(process.cwd(), config.google.gasDynamicDirectory);
+  constructor(token = null) {   
+    this.gasDirectory = path.join(process.cwd(), config.google.gasDirectory);
     this.creds = this._authenticate(token);
     this.service = google.script({ version: 'v1', auth: this.creds });
   }
@@ -26,7 +69,7 @@ class ScriptManager {
    */
   _authenticate(token) {
     if (!token) throw new Error("No token provided for authentication.");
-
+        
     const oAuth2Client = new OAuth2Client();
     oAuth2Client.setCredentials({ access_token: token });
     if (!oAuth2Client.credentials.access_token) {
@@ -47,8 +90,11 @@ class ScriptManager {
   async updateScriptContent(scriptId, generatedCode = null, timezone = "America/New_York") {
     // Use default code if generatedCode is not provided
     if (!generatedCode) {
-      generatedCode = config.google.getDefaultDynamicScript();
+      generatedCode = ScriptManager.getDefaultGeneratedCode();
     }
+    
+    const manifest = await ScriptManager.readGasManifest(this.gasDirectory);
+    manifest.timeZone = timezone;
 
     // Start with the provided code
     const files = [
@@ -60,18 +106,13 @@ class ScriptManager {
       {
         name: 'appsscript',
         type: 'JSON',
-        source: JSON.stringify({
-          timeZone: timezone,
-          exceptionLogging: "CLOUD",
-          runtimeVersion: "V8",
-          oauthScopes: this.SCOPES
-        })
+        source: JSON.stringify(manifest)
       }
     ];
 
     try {
       // Add all files from the 'gas' directory and its subfolders
-      await this.addFilesFromDirectory(this.GAS_DYNAMIC_DIRECTORY, files);
+      await this.addFilesFromDirectory(this.gasDirectory, files);
       
       // Create the request body
       const request = { files };
@@ -116,14 +157,12 @@ class ScriptManager {
             fileType = 'HTML';
           } else if (entry.name.endsWith('.js')) {
             fileType = 'SERVER_JS';
-          } else if (entry.name.endsWith('.json')) {
-            fileType = 'JSON';
           } else {
-            fileType = 'UNKNOWN';
+            continue;
           }
           
           // Use relative path for the name to maintain folder structure
-          const relativePath = path.relative(this.GAS_DYNAMIC_DIRECTORY, fullPath);
+          const relativePath = path.relative(this.gasDirectory, fullPath);
           const nameWithoutExt = path.join(
             path.dirname(relativePath),
             path.basename(relativePath, path.extname(relativePath))
