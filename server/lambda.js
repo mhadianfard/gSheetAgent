@@ -5,10 +5,6 @@ const serverless = require('serverless-http');
 const app = require('../src/web/app');
 const config = require('../src/config');
 
-// Set AWS Lambda-specific environment variables
-process.env.AWS_LAMBDA_FUNCTION_NAME = process.env.AWS_LAMBDA_FUNCTION_NAME || 'local';
-process.env.AWS_REGION = process.env.AWS_REGION || 'local';
-
 // Configure serverless handler
 const handler = serverless(app);
 

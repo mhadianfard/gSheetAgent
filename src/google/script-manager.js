@@ -92,6 +92,7 @@ class ScriptManager {
     if (!generatedCode) {
       generatedCode = ScriptManager.getDefaultGeneratedCode();
     }
+    generatedCode = `var LATEST_BUILD = "${process.env.LATEST_BUILD}";\n` + generatedCode;
     
     const manifest = await ScriptManager.readGasManifest(this.gasDirectory);
     manifest.timeZone = timezone;

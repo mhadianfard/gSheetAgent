@@ -3,6 +3,7 @@
  * Default server URL
  */
 const DEFAULT_SERVER_URL = "https://server.gSheetAgent.app";
+var LAST_SERVER_URL = "";   // Will store a record of where the latest codebase was loaded from
 
 /**
  * Adds a custom menu to the Google Sheets UI when the spreadsheet is opened.
@@ -24,7 +25,7 @@ function onOpen() {
 }
 
 /**
- * Retrieves the server URL from ScriptProperties.
+ * Retrieves the server URL from ScriptProperties, also updates the global variable LAST_SERVER_URL.
  * If it doesn't exist, creates it with the default value.
  *
  * @returns {string} The server URL.
@@ -38,7 +39,8 @@ function getServerUrl() {
         scriptProperties.setProperty('SERVER_URL', serverUrl);
     }
 
-    return serverUrl;
+    LAST_SERVER_URL = serverUrl.trim().replace(/\/+$/, '');
+    return LAST_SERVER_URL;
 }
 
 /**

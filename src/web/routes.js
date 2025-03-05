@@ -20,7 +20,20 @@ const getAuthorizationToken = (req) => {
   return authHeader.split(' ')[1];
 };
 
-// Apply CORS middleware to all routes
+/**
+ * Health check endpoint - Returns build info and status
+ * This endpoint is exempt from CORS restrictions
+ */
+router.get('/health', async (req, res) => {
+  // Get the build number from environment variable
+  const buildNumber = process.env.LATEST_BUILD || null;
+  return res.status(200).json({
+    success: true,
+    latest_build: buildNumber
+  });
+});
+
+// Apply CORS middleware to all other routes
 router.use(corsMiddleware);
 
 /**

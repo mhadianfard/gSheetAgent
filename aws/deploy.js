@@ -2,41 +2,41 @@
 /**
  * AWS Lambda Deployment Script
  * 
- * This script automates the deployment of a Lambda function to AWS using CloudFormation.
- * It handles packaging the Lambda code, creating or updating the CloudFormation stack,
- * and configuring the Lambda function URL.
- * 
- * Features:
- * - Creates an S3 deployment bucket if it doesn't exist
- * - Packages Lambda code based on files listed in lambda_include.txt
- * - Uploads the package to S3
- * - Creates/updates CloudFormation stack
- * - Automatically transfers selected environment variables from .env to Lambda (initial deployment only)
- * - Supports Lambda handler located in the server/lambda.js file
- * - Handles cleaning up failed stacks
- * - Sets up Lambda function URL for public access
- * - Supports production dependencies only in the deployment package
+ * This script automates the deployment of a Node.js application to AWS Lambda.
+ * It handles packaging the application, uploading to S3, and deploying via CloudFormation.
  * 
  * Usage:
- *   node deploy.js [options]
+ *   node aws/deploy.js [options]
  * 
  * Options:
- *   --full-deploy    Force a full stack deployment instead of just code updates
- *   --verbose        Display detailed output during deployment
- *   --help           Show this help information
+ *   --region <region>     AWS region to deploy to (default: from config or AWS_REGION env var)
+ *   --environment <env>   Deployment environment (default: Production)
+ *   --service <name>      Service name (default: from config)
+ *   --verbose             Show verbose output
+ *   --full-deploy         Force a full CloudFormation stack update instead of just code update
+ * 
+ * Required Files:
+ *   - aws/template.yaml     CloudFormation template
+ *   - lambda-include.txt    List of files/directories to include in the package
+ *   - .env                  (Optional) Environment variables to set on the Lambda function
  * 
  * Environment Variables:
- *   The following variables from .env are automatically copied to the Lambda environment
- *   on initial deployment:
- *   - OPENAI_API_KEY - Your OpenAI API key
- *   - OPENAI_MODEL - The OpenAI model to use
- *   - LLM_MODEL - Alternative LLM model configuration
- *   - GAS_DIRECTORY - Google Apps Script directory path
- *
- * Requirements:
- *   - AWS CLI credentials configured
- *   - Node.js 16+
- *   - AWS SDK for JavaScript v3
+ *   - AWS_REGION           Override region (if not specified in config or arguments)
+ *   - AWS_PROFILE          AWS credentials profile to use
+ * 
+ * The script:
+ *   1. Packages application code and dependencies
+ *   2. Creates/updates S3 bucket for deployment
+ *   3. Uploads packaged code to S3
+ *   4. Creates/updates CloudFormation stack
+ *   5. Sets environment variables on Lambda
+ *   6. Configures a public Lambda function URL
+ *   7. Generates and sets a build number
+ * 
+ * Notes:
+ *   - Uses retry mechanism for environment variable updates
+ *   - Handles creating proper permissions for Lambda function URL
+ *   - Generates build number (timestamp) for each deployment
  */
 
 require('dotenv').config();
@@ -45,7 +45,7 @@ const { CloudFormationClient, DescribeStacksCommand, CreateStackCommand, UpdateS
         DeleteStackCommand, ListStackResourcesCommand } = require('@aws-sdk/client-cloudformation');
 const { LambdaClient, UpdateFunctionCodeCommand, GetFunctionCommand, 
         CreateFunctionUrlConfigCommand, GetFunctionUrlConfigCommand,
-        AddPermissionCommand, UpdateFunctionConfigurationCommand } = require('@aws-sdk/client-lambda');
+        AddPermissionCommand, UpdateFunctionConfigurationCommand, GetPolicyCommand } = require('@aws-sdk/client-lambda');
 const { IAMClient, GetRoleCommand, ListAttachedRolePoliciesCommand, 
         DetachRolePolicyCommand, ListRolePoliciesCommand, 
         DeleteRolePolicyCommand } = require('@aws-sdk/client-iam');
@@ -60,6 +60,7 @@ const { rimraf } = require('rimraf');
 const archiver = require('archiver');
 const { program } = require('commander');
 const { fromIni } = require('@aws-sdk/credential-providers');
+const { generateBuildNumber } = require('../src/utils/build');
 
 // Colors for console output
 const colors = {
@@ -144,6 +145,97 @@ async function runCommand(fn, ...args) {
 }
 
 /**
+ * Waits for a Lambda function update to complete
+ * @param {string} functionName - Lambda function name
+ * @returns {Promise<void>}
+ */
+async function waitForLambdaUpdate(functionName) {
+  logStatus(`Waiting for Lambda update to complete...`);
+  let isUpdating = true;
+  let retries = 0;
+  const maxRetries = 30; // Maximum 30 retries (30 seconds)
+  
+  while (isUpdating && retries < maxRetries) {
+    try {
+      const result = await runCommand(() => lambdaClient.send(new GetFunctionCommand({
+        FunctionName: functionName
+      })));
+      
+      // Check Lambda state - if it's Active, the update has completed
+      const state = result.Configuration.State;
+      if (state === 'Active') {
+        isUpdating = false;
+        logStatus(`Lambda update completed (${retries + 1} attempts)`);
+      } else {
+        logStatus(`Lambda is still updating (${state}), waiting...`);
+        retries++;
+        // Wait for 1 second before checking again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    } catch (error) {
+      retries++;
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  if (retries >= maxRetries) {
+    logStatus(`Warning: Lambda update check timed out after ${maxRetries} attempts`);
+  }
+}
+
+/**
+ * Updates Lambda environment variables with retry mechanism
+ * @param {string} functionName - Lambda function name
+ * @param {Object} envVars - Environment variables to set
+ * @returns {Promise<boolean>} - Success status
+ */
+async function updateLambdaEnvironmentWithRetry(functionName, envVars) {
+  const maxRetries = 3;
+  const retryDelay = 10000; // 10 seconds
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      // Get current Lambda configuration
+      const lambdaConfig = await runCommand(() => lambdaClient.send(new GetFunctionCommand({
+        FunctionName: functionName
+      })));
+      
+      // Merge existing environment variables with new ones
+      const currentVars = lambdaConfig.Configuration.Environment?.Variables || {};
+      const updatedVars = { ...currentVars, ...envVars };
+      
+      // Update Lambda configuration with new environment variables
+      await runCommand(() => lambdaClient.send(new UpdateFunctionConfigurationCommand({
+        FunctionName: functionName,
+        Environment: {
+          Variables: updatedVars
+        }
+      })));
+      
+      logStatus(`Lambda environment variables updated successfully (attempt ${attempt})`);
+      return true;
+    } catch (error) {
+      const isUpdateInProgressError = error.message && 
+        error.message.includes('The operation cannot be performed at this time') &&
+        error.message.includes('An update is in progress');
+      
+      if (isUpdateInProgressError && attempt < maxRetries) {
+        logStatus(`Update in progress, retrying in ${retryDelay/1000} seconds... (attempt ${attempt}/${maxRetries})`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      } else if (isUpdateInProgressError) {
+        logStatus(`Failed to update environment variables after ${maxRetries} attempts`);
+        return false;
+      } else {
+        // Some other error occurred
+        throw error;
+      }
+    }
+  }
+  
+  return false;
+}
+
+/**
  * Main deployment function
  */
 async function deploy() {
@@ -223,14 +315,30 @@ async function deploy() {
           const updatedOutputs = await getStackOutputs();
           functionName = updatedOutputs.find(o => o.OutputKey === 'LambdaFunctionName')?.OutputValue;
         } else {
-          // Just update the Lambda code
-          logStatus(`Updating Lambda function: ${functionName}`);
+          // First update the Lambda code
+          logStatus(`Updating Lambda function code: ${functionName}`);
           await runCommand(() => lambdaClient.send(new UpdateFunctionCodeCommand({
             FunctionName: functionName,
             S3Bucket: config.deploymentBucket,
             S3Key: 'lambda-package.zip',
             Publish: true
           })));
+          
+          // Generate new build number for this deployment
+          const buildNumber = generateBuildNumber();
+          logStatus(`Setting build number: ${buildNumber}`);
+          
+          // Then update environment variables with retry logic
+          const envUpdateSuccess = await updateLambdaEnvironmentWithRetry(
+            functionName, 
+            { LATEST_BUILD: buildNumber }
+          );
+          
+          if (envUpdateSuccess) {
+            logStatus(`Build number ${buildNumber} set successfully`);
+          } else {
+            logStatus(`Warning: Could not update build number. Lambda function code was updated.`);
+          }
           
           logStatus("Lambda function updated successfully");
         }
@@ -462,7 +570,7 @@ async function cleanupFailedStack() {
 async function createNewStack() {
   logStatus(`Creating new CloudFormation stack: ${config.stackName}`);
   
-  const templateBody = await readFile(path.join(process.cwd(), config.templateFile), 'utf8');
+  const templateBody = await readFile(config.templateFile, 'utf8');
   
   // Read environment variables from .env file for initial deployment
   const envVars = await readEnvFile();
@@ -569,6 +677,11 @@ async function updateLambdaEnvironment(functionName, envVars) {
       FunctionName: functionName
     })));
     
+    // Add build number to environment variables
+    const buildNumber = generateBuildNumber();
+    envVars.LATEST_BUILD = buildNumber;
+    logStatus(`Setting build number: ${buildNumber}`);
+    
     // Merge existing environment variables with new ones
     const currentVars = lambdaConfig.Configuration.Environment?.Variables || {};
     const updatedVars = { ...currentVars, ...envVars };
@@ -593,7 +706,7 @@ async function updateLambdaEnvironment(functionName, envVars) {
 async function updateFullStack() {
   logStatus("Updating CloudFormation stack...");
   
-  const templateBody = await readFile(path.join(process.cwd(), config.templateFile), 'utf8');
+  const templateBody = await readFile(config.templateFile, 'utf8');
   
   try {
     await runCommand(() => cfClient.send(new UpdateStackCommand({
@@ -656,13 +769,16 @@ async function getStackOutputs() {
 async function setupFunctionUrl(functionName) {
   logStatus("Setting up public URL for Lambda function...");
   
+  let functionUrl;
+  
   try {
     // Check if function URL already exists
     const urlConfig = await lambdaClient.send(new GetFunctionUrlConfigCommand({
       FunctionName: functionName
     }));
     
-    return urlConfig.FunctionUrl;
+    functionUrl = urlConfig.FunctionUrl;
+    logStatus(`Function URL exists: ${functionUrl}`);
   } catch (error) {
     if (error.name === 'ResourceNotFoundException') {
       // Create function URL
@@ -672,7 +788,25 @@ async function setupFunctionUrl(functionName) {
         AuthType: 'NONE'
       })));
       
-      // Add permission for public access
+      functionUrl = response.FunctionUrl;
+      logStatus(`Created function URL: ${functionUrl}`);
+    } else {
+      throw error;
+    }
+  }
+  
+  // Always ensure permissions are set correctly, regardless of whether URL was just created or already existed
+  try {
+    // Check if policy exists
+    await lambdaClient.send(new GetPolicyCommand({
+      FunctionName: functionName
+    }));
+    
+    logStatus("Function URL permissions already exist");
+  } catch (error) {
+    if (error.name === 'ResourceNotFoundException') {
+      // Policy doesn't exist, add it
+      logStatus("Adding permission for public access to function URL...");
       await runCommand(() => lambdaClient.send(new AddPermissionCommand({
         FunctionName: functionName,
         StatementId: 'FunctionURLAllowPublicAccess',
@@ -681,11 +815,13 @@ async function setupFunctionUrl(functionName) {
         FunctionUrlAuthType: 'NONE'
       })));
       
-      return response.FunctionUrl;
+      logStatus("Function URL public access permission added");
+    } else {
+      throw error;
     }
-    
-    throw error;
   }
+  
+  return functionUrl;
 }
 
 // Run the deployment
