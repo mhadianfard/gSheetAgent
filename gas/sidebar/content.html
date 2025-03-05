@@ -51,7 +51,16 @@
 
     <!-- Footer -->
     <footer class="text-center mt-4" style="color: lightgrey; font-size: 0.8em; position: relative; bottom: 0; width: 100%;">
-      <p>Built with &hearts; by Mohsen Hadianfard</p>
+      <p id="footer-links" style="text-align: center;">
+        <a href="https://github.com/mhadianfard/gSheetAgent#readme" target="_blank" style="color: #adb5bd; margin: 0 5px;">Documentation</a> | 
+        <a href="https://github.com/mhadianfard/gSheetAgent#privacy-policy" target="_blank" style="color: #adb5bd; margin: 0 5px;">Privacy Policy</a> | 
+        <a href="https://github.com/mhadianfard/gSheetAgent#contact" target="_blank" style="color: #adb5bd; margin: 0 5px;">Contact</a>
+      </p>
+      <p id="footer-built-by">
+        Built with &hearts; by Mohsen Hadianfard
+        <br>
+        <span id="footer-build-info" style="font-size: 0.7em;">build #<?!= getBuildInformation() ?></span>
+      </p>
     </footer>
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

@@ -1,11 +1,12 @@
 const app = require('../src/web/app');
 const config = require('../src/config');
-const { generateBuildNumber } = require('../src/utils/build');
+const { generateBuildNumber } = require('../utils/build');
 
 const PORT = config.server.port;
 
 // Set build number in environment variable
 process.env.LATEST_BUILD = generateBuildNumber();
+process.env.LAST_SERVER = 'localhost';
 
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);

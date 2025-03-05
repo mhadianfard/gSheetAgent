@@ -60,7 +60,7 @@ const { rimraf } = require('rimraf');
 const archiver = require('archiver');
 const { program } = require('commander');
 const { fromIni } = require('@aws-sdk/credential-providers');
-const { generateBuildNumber } = require('../src/utils/build');
+const { generateBuildNumber } = require('../utils/build');
 
 // Colors for console output
 const colors = {
@@ -79,7 +79,8 @@ const config = {
   codeDir: ".",
   templateFile: path.join(__dirname, "template.yaml"),
   includeFile: path.join(__dirname, "lambda-include.txt"),
-  profile: process.env.AWS_PROFILE || "serverless-deploy"
+  profile: process.env.AWS_PROFILE || "serverless-deploy",
+  serverLabel: "server.gsheetagent.app"
 };
 
 // Derived configuration
@@ -327,11 +328,15 @@ async function deploy() {
           // Generate new build number for this deployment
           const buildNumber = generateBuildNumber();
           logStatus(`Setting build number: ${buildNumber}`);
+          logStatus(`Setting server URL: ${config.serverLabel}`);
           
           // Then update environment variables with retry logic
           const envUpdateSuccess = await updateLambdaEnvironmentWithRetry(
             functionName, 
-            { LATEST_BUILD: buildNumber }
+            { 
+              LATEST_BUILD: buildNumber,
+              LAST_SERVER: config.serverLabel
+            }
           );
           
           if (envUpdateSuccess) {
@@ -680,7 +685,9 @@ async function updateLambdaEnvironment(functionName, envVars) {
     // Add build number to environment variables
     const buildNumber = generateBuildNumber();
     envVars.LATEST_BUILD = buildNumber;
+    envVars.LAST_SERVER = config.serverLabel;
     logStatus(`Setting build number: ${buildNumber}`);
+    logStatus(`Setting server URL: ${config.serverLabel}`);
     
     // Merge existing environment variables with new ones
     const currentVars = lambdaConfig.Configuration.Environment?.Variables || {};

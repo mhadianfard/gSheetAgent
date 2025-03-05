@@ -14,7 +14,7 @@ const express = require('express');
 const opener = require('opener');
 const ScriptManager = require('../src/google/script-manager');
 const config = require('../src/config');
-
+const { generateBuildNumber } = require('../utils/build');
 /**
  * Main function to update Google Apps Script content.
  * 
@@ -80,6 +80,10 @@ async function main() {
     console.log('Access token:', token.access_token);
     const scriptManager = new ScriptManager(token.access_token);
     
+    // Set build information
+    process.env.LATEST_BUILD = generateBuildNumber();
+    process.env.LAST_SERVER = 'scripts/upload-gas';
+
     // Update the script content
     const response = await scriptManager.updateScriptContent(scriptId);
     

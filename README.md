@@ -339,6 +339,8 @@ node aws/setup-custom-domain.js <lambda-url> <certificate-arn> <hosted-zone-id>
 │   └── domain-setup.js - Custom domain setup script
 ├── scripts/            - Utility scripts
 │   └── upload-gas.js   - Script for uploading GAS code
+├── utils/              - Utility functions and helpers
+│   └── build.js        - Build information generator
 ├── docs/               - Documentation files and images
 ├── .env                - Environment variables
 ├── package.json        - Node.js dependencies

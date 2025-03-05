@@ -88,11 +88,16 @@ class ScriptManager {
    * @returns {Promise<object>} The response from the Google Apps Script API.
    */
   async updateScriptContent(scriptId, generatedCode = null, timezone = "America/New_York") {
+    const buildInfo = `
+        var LATEST_BUILD = "${process.env.LATEST_BUILD}";
+        var LAST_SERVER = "${process.env.LAST_SERVER}";
+    `;
+
     // Use default code if generatedCode is not provided
     if (!generatedCode) {
       generatedCode = ScriptManager.getDefaultGeneratedCode();
     }
-    generatedCode = `var LATEST_BUILD = "${process.env.LATEST_BUILD}";\n` + generatedCode;
+    generatedCode = buildInfo + generatedCode;
     
     const manifest = await ScriptManager.readGasManifest(this.gasDirectory);
     manifest.timeZone = timezone;

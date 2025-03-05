@@ -3,7 +3,6 @@
  * Default server URL
  */
 const DEFAULT_SERVER_URL = "https://server.gSheetAgent.app";
-var LAST_SERVER_URL = "";   // Will store a record of where the latest codebase was loaded from
 
 /**
  * Adds a custom menu to the Google Sheets UI when the spreadsheet is opened.
@@ -25,7 +24,7 @@ function onOpen() {
 }
 
 /**
- * Retrieves the server URL from ScriptProperties, also updates the global variable LAST_SERVER_URL.
+ * Retrieves the server URL from ScriptProperties.
  * If it doesn't exist, creates it with the default value.
  *
  * @returns {string} The server URL.
@@ -39,8 +38,7 @@ function getServerUrl() {
         scriptProperties.setProperty('SERVER_URL', serverUrl);
     }
 
-    LAST_SERVER_URL = serverUrl.trim().replace(/\/+$/, '');
-    return LAST_SERVER_URL;
+    return serverUrl.trim().replace(/\/+$/, '');
 }
 
 /**
@@ -129,5 +127,18 @@ function resetScript() {
     const documentProperties = PropertiesService.getDocumentProperties();
     documentProperties.deleteAllProperties();
     console.log('Script reset successfully');
+}
+
+/**
+ * Retrieves build information including the build number and server URL.
+ *
+ * @returns {string} A string containing the build number and server URL, or an empty string if either is not available.
+ */
+function getBuildInformation() {
+    let info = '';
+    if (typeof LATEST_BUILD !== 'undefined' && typeof LAST_SERVER !== 'undefined') {
+        info = `${LATEST_BUILD} @ ${LAST_SERVER}`;
+    }
+    return info;
 }
 
