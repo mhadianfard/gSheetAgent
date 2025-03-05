@@ -149,12 +149,12 @@ gSheetAgent needs a dedicated Apps Script project. If your spreadsheet already h
 </details>
 
 Copy the code from the `gas/appsscript.json` in this repo, and paste it into `appsscript.json` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/595153b90f2ae3e04f6001ff7f09662019ea632e/gas/appsscript.json#L1-L10
+https://github.com/mhadianfard/gSheetAgent/blob/66c00008b8edca518f0f9cc733fea62813da4e92/gas/appsscript.json#L1-L10
 <kbd><img src="docs/paste-start-manifest.png" alt="Paste starter appsscript.json" height="200"/></kbd>
 
 Go to the `Editor` section from the left panel, and select `Code.gs` from the file list.
 Copy the code from the `gas/start.js` in this repo, and paste it into `Code.gs` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/595153b90f2ae3e04f6001ff7f09662019ea632e/gas/start.js#L1-L130
+https://github.com/mhadianfard/gSheetAgent/blob/66c00008b8edca518f0f9cc733fea62813da4e92/gas/start.js#L1-L132
 <kbd><img src="docs/paste-starter-code.png" alt="Paste Starter Code" height="200"/></kbd>
 
 
