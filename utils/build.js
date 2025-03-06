@@ -16,7 +16,7 @@ function generateBuildNumber() {
   const minutes = torontoDate.getMinutes().toString().padStart(2, '0');
   const seconds = torontoDate.getSeconds().toString().padStart(2, '0');
   
-  return `${year}${month}${day}${hours}${minutes}.${seconds}`;
+  return `${year}${month}${day}.${hours}${minutes}.${seconds}`;
 }
 
 module.exports = {
