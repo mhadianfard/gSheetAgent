@@ -1,5 +1,7 @@
 # gSheetAgent
 An experimental agentic AI assistant for Google Sheets.
+https://github.com/user-attachments/assets/b351ff4a-096c-46ed-b960-5a6dfbb3dedc
+
 
 ## Table of Contents
 - [How it works](#how-it-works)
