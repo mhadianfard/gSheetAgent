@@ -23,6 +23,7 @@ gSheetAgent enables users to describe their desired actions in the spreadsheet, 
 Below are things the developer is aware of and may address in future releases, especially if there's demand for them:
 
 - The code generation and explanation logic provided by the LLM is very basic with no memory of past actions, no handling of edge cases, no guardrails and low quality in it's explanations.
+- Thinking takes a long time.
 - The agent only works with OpenAI models at the moment.
 - The microphone feature is very basic and doesn't handle pauses in speech very well.
 

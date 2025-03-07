@@ -1,4 +1,3 @@
-
 /**
  * Default server URL
  */
@@ -69,7 +68,8 @@ function getScriptAttributes() {
         oauthToken: ScriptApp.getOAuthToken(),
         scriptId: ScriptApp.getScriptId(),
         timezone: SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone(),
-        serverUrl: getServerUrl()
+        serverUrl: getServerUrl(),
+        userEmail: Session.getActiveUser().getEmail()
     };
 }
 

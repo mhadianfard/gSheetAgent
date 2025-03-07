@@ -1,10 +1,64 @@
 <script>
+    // Initialize Mixpanel
+    let MIXPANEL_TOKEN = "28b405ec62050cad7b92160c3388f536";
+    (function(c,a){if(!a.__SV){var b=window;try{var d,m,j,k=b.location,f=k.hash;d=function(a,b){return(m=a.match(RegExp(b+"=([^&]*)")))?m[1]:null};f&&d(f,"state")&&(j=JSON.parse(decodeURIComponent(d(f,"state"))),"mpeditor"===j.action&&(b.sessionStorage.setItem("_mpcehash",f),history.replaceState(j.desiredHash||"",c.title,k.pathname+k.search)))}catch(n){}var l,h;window.mixpanel=a;a._i=[];a.init=function(b,d,g){function c(b,i){var a=i.split(".");2==a.length&&(b=b[a[0]],i=a[1]);b[i]=function(){b.push([i].concat(Array.prototype.slice.call(arguments,0)))}}var e=a;"undefined"!==typeof g?e=a[g]=[]:g="mixpanel";e.people=e.people||[];e.toString=function(b){var a="mixpanel";"mixpanel"!==g&&(a+="."+g);b||(a+=" (stub)");return a};e.people.toString=function(){return e.toString(1)+".people (stub)"};l="disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove".split(" ");
+    for(h=0;h<l.length;h++)c(e,l[h]);var f="set set_once union unset remove delete".split(" ");e.get_group=function(){function a(c){b[c]=function(){call2_args=arguments;call2=[c].concat(Array.prototype.slice.call(call2_args,0));e.push([d,call2])}}for(var b={},d=["get_group"].concat(Array.prototype.slice.call(arguments,0)),c=0;c<f.length;c++)a(f[c]);return b};a._i.push([b,d,g])};a.__SV=1.2;b=c.createElement("script");b.type="text/javascript";b.async=!0;b.src="undefined"!==typeof MIXPANEL_CUSTOM_LIB_URL?
+    MIXPANEL_CUSTOM_LIB_URL:"file:"===c.location.protocol&&"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js".match(/^\/\//)?"https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js":"//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js";d=c.getElementsByTagName("script")[0];d.parentNode.insertBefore(b,d)}})(document,window.mixpanel||[]);
+    
+    /**
+     * Initializes Mixpanel with the provided attributes.
+     * 
+     * This function sets up Mixpanel tracking by initializing it with the 
+     * specified token, identifying the user, and registering super properties 
+     * that will be sent with every event. It also tracks the initial sidebar 
+     * open event.
+     * 
+     * @param {Object} attributes - The attributes for Mixpanel initialization.
+     * @param {string} attributes.userEmail - The email of the user to identify.
+     * @param {string} attributes.scriptId - The ID of the script.
+     * @param {string} attributes.serverUrl - The current server URL.
+     */
+    function initMixpanel(attributes) {
+        mixpanel.init(MIXPANEL_TOKEN);
+        mixpanel.identify(attributes.userEmail);
+        
+        // Register super properties that will be sent with every event
+        let superProperties = {
+            "Script ID": attributes.scriptId,
+            "Configured Server URL": attributes.serverUrl
+        };
+        
+        // Check if build information exists and add it to super properties
+        if (typeof LATEST_BUILD !== 'undefined') {
+            superProperties["Current Build"] = LATEST_BUILD;
+        }
+        
+        // Check if server information exists and add it to super properties
+        if (typeof LAST_SERVER !== 'undefined') {
+            superProperties["Build Server"] = LAST_SERVER;
+        }
+        
+        // Register all super properties
+        mixpanel.register(superProperties);
+        
+        // Track initial sidebar open event
+        mixpanel.track("Sidebar Opened");
+    }
+    
     let isListening = false; // Track the listening state
     let recognition; // Speech recognition object
 
-    // Initialize speech recognition on page load
+    
     window.onload = function() {
         initSpeechRecognition();
+        
+        google.script.run
+            .withSuccessHandler(function(attributes) {
+                // Initialize Mixpanel with user email and script attributes
+                initMixpanel(attributes);
+            })
+            .withFailureHandler(scriptRunErrorHandler)
+            .getScriptAttributes();
     };
 
     /**
@@ -63,14 +117,24 @@
 
     /**
      * Starts or stops the speech recognition based on the current state.
+     * Currently disabled - microphone support coming soon.
      */
     function toggleListening() {
+        // Microphone functionality is disabled
+        google.script.run.displayToast("Microphone support coming soon!");
+        mixpanel.track("Microphone Coming Soon Clicked");
+        return false;
+        
+        /* Original code commented out
         if (isListening) {
             recognition.stop();
+            mixpanel.track("Microphone Stopped");
         } else {
             recognition.start();
+            mixpanel.track("Microphone Started");
         }
         updateMicrophoneButton();
+        */
     }
 
     /**
@@ -125,6 +189,11 @@
 
         // Get the user input from the textarea
         const instruction = document.querySelector('textarea').value;
+        
+        // Track prompt submission
+        mixpanel.track("Prompt Submitted", {
+            "Instruction Length": instruction.length
+        });
 
         // Get the OAuth token
         google.script.run.withSuccessHandler(function(scriptAttributes) {
@@ -143,12 +212,17 @@
             })
             .then(response => {
                 if (!response.ok) {
+                    mixpanel.track("API Error", {
+                        "Response Status": response.status,
+                        "Response Text": response.statusText
+                    });
                     throw new Error('Network response was not ok');
                 }
                 return response.json();
             })
             .then(data => {
-                console.log('Success:', data);            
+                console.log('Success:', data);
+                mixpanel.track("Confirmation Shown");
                 const receivedInstructions = Array.isArray(data.received_instruction) 
                     ? '<ul>' + data.received_instruction.map(item => `<li>${item}</li>`).join('') + '</ul>' 
                     : data.received_instruction;
@@ -156,6 +230,9 @@
             })
             .catch((error) => {
                 console.error('Error:', error);
+                mixpanel.track("Error", {
+                    "Error Message": error.message
+                });
                 alert('There was an error processing your request: ' + error.message);
                 enterPromptMode();
             });
@@ -170,16 +247,23 @@
     function applyChanges() {
         // Show thinking mode with a custom label
         enterThinkingMode("Applying changes...");
+        
+        // Track apply changes action
+        mixpanel.track("Changes Submitted");
 
         // Call the Google Apps Script function to apply changes
         google.script.run
             .withSuccessHandler(function(response) {
                 enterPromptMode();
                 google.script.run.displayToast('Changes applied successfully!');
+                mixpanel.track("Changes Applied");
                 clearTextarea();
             })
             .withFailureHandler(function(error) {
                 scriptRunErrorHandler(error);
+                mixpanel.track("Changes Failed", {
+                    "Error Message": error.message
+                });
                 enterPromptMode();                
             })
             .performAction(); // Call the function to perform the action
@@ -189,6 +273,7 @@
      * Refreshes the sidebar content by calling the refreshSidebar function in the Google Apps Script.
      */
     function refreshSidebar() {
+        mixpanel.track("Sidebar Refreshed");
         google.script.run
             .withFailureHandler(scriptRunErrorHandler)
             .refreshSidebar();
@@ -199,12 +284,14 @@
      */
     function clearTextarea() {
         document.querySelector('textarea').value = '';
+        mixpanel.track("Textarea Cleared");
     }
 
     /**
      * Switches the sidebar back to Prompt Mode, hiding the confirmation buttons and showing the prompt.
      */
     function cancel() {
+        mixpanel.track("Changes Cancelled");
         enterPromptMode();
     }
 
@@ -214,10 +301,17 @@
      */
     function scriptRunErrorHandler(error) {
         console.error(error);
+        mixpanel.track("Script Error", {
+            "Error Message": error.message
+        });
+        
         if (error.message.includes("PERMISSION_DENIED")) {
             window.alert("You're likely logged into two Google Accounts at the same time - which is confusing the heck out of Google. Please consider logging out of the other account or using incognito to run this app - until Google fixes their bug!");
         } else {
-            alert('There was an error processing your request.');
+            alert("It looks like the code we generated did not work as expected. Currenlty, gSheetAgent is in beta and imporvements for more complex instructions are coming soon.\n"
+                + "For now, I recommend to try again with a more explicit instruction. \n"
+                + "If you are technical enough navigate to Extensions > Apps Script and make some changes to the automatically generated code.\n"
+                + "Error was: " + error.message);
         }
     }
 </script>

@@ -23,7 +23,7 @@ class LLMClient {
       const instructionContent = await fs.readFile(this.instructionFile, 'utf8');
       
       const response = await this.client.chat.completions.create({
-        model: config.llm.model || "gpt-4o",
+        model: config.llm.model || "gpt-4",
         messages: [
           { role: "system", content: instructionContent },
           { role: "user", content: `\`\`\`${prompt}\`\`\`` }
