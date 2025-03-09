@@ -1,6 +1,13 @@
 # gSheetAgent
 An experimental agentic AI assistant for Google Sheets.
 
+<a href="https://youtu.be/2dQcDYDvFUg" target="_blank">
+  <video src="https://github.com/user-attachments/assets/db2bbf3f-cd08-4738-8dae-ef965fc59007" height="400" controls>
+    See demo video at [https://youtu.be/2dQcDYDvFUg](https://youtu.be/2dQcDYDvFUg)
+  </video>
+</a>
+
+
 ## Table of Contents
 - [How it works](#how-it-works)
 - [Known Limitations](#known-limitations)
@@ -150,12 +157,12 @@ gSheetAgent needs a dedicated Apps Script project. If your spreadsheet already h
 </details>
 
 Copy the code from the `gas/appsscript.json` in this repo, and paste it into `appsscript.json` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/66c00008b8edca518f0f9cc733fea62813da4e92/gas/appsscript.json#L1-L10
+https://github.com/mhadianfard/gSheetAgent/blob/c5be51cd3184e2dcd4dff2ff477e0a386c68d611/gas/appsscript.json#L1-L12
 <kbd><img src="docs/paste-start-manifest.png" alt="Paste starter appsscript.json" height="200"/></kbd>
 
 Go to the `Editor` section from the left panel, and select `Code.gs` from the file list.
 Copy the code from the `gas/start.js` in this repo, and paste it into `Code.gs` in the Apps Script editor.
-https://github.com/mhadianfard/gSheetAgent/blob/66c00008b8edca518f0f9cc733fea62813da4e92/gas/start.js#L1-L132
+https://github.com/mhadianfard/gSheetAgent/blob/c5be51cd3184e2dcd4dff2ff477e0a386c68d611/gas/start.js#L1-L143
 <kbd><img src="docs/paste-starter-code.png" alt="Paste Starter Code" height="200"/></kbd>
 
 
@@ -270,7 +277,7 @@ You can deploy the main Google Apps Script code to your Google Apps Script proje
 > You would need to have a valid authentication token in `token.json` as described in Step 5, for this to work. Also you would have had to specify a `SCRIPT_ID` in your `.env` file as per Step 6.
 
 ```sh
-node upload-gas.js
+node scripts/upload-gas.js
 ```
 Once code is uploaded into your Google Apps Script project, go to your spreadsheet, refresh the browser window and you should see the new `gSheetAgent` menu item. Select `Setup` to begin. This will initialize the add-on and set up necessary properties. After setup is complete, you'll be able to use the `Open Sidebar` option to access the agent.
 
@@ -311,7 +318,7 @@ node aws/deploy.js
 > [!NOTE]
 > The domain setup script has ample documentation written inside it. Read for more details.
 ```sh
-node aws/setup-custom-domain.js <lambda-url> <certificate-arn> <hosted-zone-id>
+node aws/domain-setup.js <lambda-url> <certificate-arn> <hosted-zone-id>
 ```
 
 ### Directory Structure
